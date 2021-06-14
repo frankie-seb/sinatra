@@ -197,7 +197,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 					n = strings.Replace(n, s, r, -1)
 				}
 
-				if strings.EqualFold(getFirstWord(v[0].Name), getFirstWord(n)) || strings.EqualFold(getFirstWord(v[0].Name)+"s", getFirstWord(n)) {
+				if strings.EqualFold(getFirstWord(v[0].Name), getFirstWord(n)) || strings.EqualFold(utils.Plural(getFirstWord(v[0].Name)), getFirstWord(n)) {
 					resolver := &Resolver{
 						Object:         o,
 						Field:          f,
