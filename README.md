@@ -1,2 +1,2 @@
-# be-generator
+# be-base
 Frankie Golang Code Base
