@@ -5,14 +5,14 @@ package plugins
 import (
 	"testing"
 
-	"github.com/FrankieHealth/be-base/internal/utils"
+	utils "github.com/FrankieHealth/be-base/internal/utils"
 )
 
 func TestShortType(t *testing.T) {
 	testShortType(t, "gitlab.com/product/app/backend/graphql_models.FlowWhere", "FlowWhere")
 	testShortType(t, "*gitlab.com/product/app/backend/graphql_models.FlowWhere", "*FlowWhere")
-	testShortType(t, "*be-generator/utils.GeoPoint", "*GeoPoint")
-	testShortType(t, "be-generator/utils.GeoPoint", "GeoPoint")
+	testShortType(t, "*utils.GeoPoint", "*GeoPoint")
+	testShortType(t, "utils.GeoPoint", "GeoPoint")
 	testShortType(t, "*string", "*string")
 	testShortType(t, "string", "string")
 	testShortType(t, "*time.Time", "*time.Time")

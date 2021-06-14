@@ -13,7 +13,7 @@ import (
 	"bytes"
 	"strings"
 
-	base_helpers "github.com/FrankieHealth/be-generator/utils"
+	base_helpers "github.com/FrankieHealth/be-base/helpers"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/99designs/gqlgen/graphql"

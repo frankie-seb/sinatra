@@ -21,7 +21,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/types"
 	"github.com/volatiletech/null/v8"
 
-	base_helpers "github.com/FrankieHealth/be-generator/utils"
+	base_helpers "github.com/FrankieHealth/be-base/helpers"
 
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
