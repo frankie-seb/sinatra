@@ -303,6 +303,14 @@ func IntToTimeDotTime(v int) time.Time {
 	return time.Unix(int64(v), 0)
 }
 
+func Float64ToFloat32(v float64) float32 {
+	return float32(v)
+}
+
+func Float32ToFloat64(v float32) float64 {
+	return float64(v)
+}
+
 func NullDotStringToString(v null.String) string {
 	if !v.Valid {
 		return ""
