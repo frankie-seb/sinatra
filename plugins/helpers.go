@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"sort"
@@ -385,7 +386,11 @@ func enumsWithout(enums []*Enum, skip []string) []*Enum {
 func getTemplateContent(filename string) (string, error) {
 	// load path relative to calling source file
 	_, callerFile, _, _ := runtime.Caller(0) //nolint:dogsled
-	rootDir := path.Dir(callerFile)
+	rootDir, err := filepath.Abs(filepath.Dir(callerFile))
+	if err != nil {
+		log.Fatal()
+	}
+
 	content, err := ioutil.ReadFile(path.Join(rootDir, "internal/templates", filename))
 	if err != nil {
 		return "", fmt.Errorf("could not read template file: %v", err)
