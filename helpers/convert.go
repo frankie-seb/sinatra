@@ -307,6 +307,10 @@ func Float64ToFloat32(v float64) float32 {
 	return float32(v)
 }
 
+func PointerFloat64ToFloat32(v *float64) float32 {
+	return float32(*v)
+}
+
 func Float32ToFloat64(v float32) float64 {
 	return float64(v)
 }
