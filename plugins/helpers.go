@@ -386,12 +386,9 @@ func enumsWithout(enums []*Enum, skip []string) []*Enum {
 func getTemplateContent(filename string) (string, error) {
 	// load path relative to calling source file
 	_, callerFile, _, _ := runtime.Caller(0) //nolint:dogsled
-	rootDir, err := filepath.Abs(filepath.Dir(callerFile))
-	if err != nil {
-		log.Fatal()
-	}
-
-	content, err := ioutil.ReadFile(path.Join(rootDir, "internal/templates", filename))
+	rootDir := filepath.Dir(callerFile)
+	absRootDir := rootDir[:len(rootDir)-8]
+	content, err := ioutil.ReadFile(path.Join(absRootDir, "internal/templates", filename))
 	if err != nil {
 		return "", fmt.Errorf("could not read template file: %v", err)
 	}
