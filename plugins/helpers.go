@@ -387,7 +387,7 @@ func getTemplateContent(filename string) (string, error) {
 	// load path relative to calling source file
 	_, callerFile, _, _ := runtime.Caller(1) //nolint:dogsled
 	rootDir := filepath.Dir(callerFile)
-	content, err := ioutil.ReadFile(path.Join(rootDir, "template_files", filename))
+	content, err := ioutil.ReadFile(path.Join(rootDir, "internal/templates", filename))
 	if err != nil {
 		return "", fmt.Errorf("could not read template file: %v", err)
 	}
