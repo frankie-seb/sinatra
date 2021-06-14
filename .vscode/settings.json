@@ -1,0 +1,12 @@
+{
+  "go.formatTool": "gofmt",
+  "[go]": {
+    "editor.insertSpaces": false,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    },
+    "editor.suggest.snippetsPreventQuickSuggestions": false
+  },
+  "breadcrumbs.showArrays": false
+}
