@@ -555,6 +555,9 @@ func PointerIntToNullDotInt(v *int) null.Int {
 }
 
 func PointerStringToNullDotInt(v *string) null.Int {
+	if v == nil {
+		return null.IntFromPtr(nil)
+	}
 	n, _ := strconv.Atoi(*v)
 	return null.IntFromPtr(&n)
 }
