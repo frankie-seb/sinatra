@@ -59,7 +59,7 @@ func WriteTemplateFile(fileName string, cfg Options) error {
 
 	dst.Inspect(node, func(n dst.Node) bool {
 		fn, ok := n.(*dst.FuncDecl)
-		if ok && isFunctionOverriddenByUser(fn.Name.Name, cfg.UserDefinedFunctions) {
+		if ok && isFunctionOverriddenByUser(fn.Name.Name, cfg.UserDefinedFunctions) && isBaseResolverOrQuery(fn.Recv.List) {
 			fn.Decs.Start.Append("// OVERIDESTART")
 			fn.Decs.End.Append("// OVERIDEEND")
 		}
@@ -123,6 +123,15 @@ func isFunctionOverriddenByUser(functionName string, userDefinedFunctions []stri
 		}
 	}
 	return false
+}
+
+func isBaseResolverOrQuery(recvList []*dst.Field) bool {
+	v := false
+	for _, r := range recvList {
+		s := fmt.Sprintf("%s", r.Type)
+		v = strings.Contains(s, "queryResolver") || strings.Contains(s, "mutationResolver")
+	}
+	return v
 }
 
 func ToGo(name string) string {

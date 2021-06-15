@@ -276,6 +276,7 @@ type Resolver struct {
 	IsBatchCreate             bool
 	IsBatchUpdate             bool
 	IsBatchDelete             bool
+	IsIgnore                  bool
 	ResolveOrganizationID     bool // TODO: something more pluggable
 	ResolveUserOrganizationID bool // TODO: something more pluggable
 	ResolveUserID             bool // TODO: something more pluggable
@@ -354,7 +355,8 @@ func enhanceResolver(r *Resolver, models []*Model) { //nolint:gocyclo
 	case "Subscription":
 		// TODO: generate helpers for subscription
 	default:
-		log.Warn().Str("unknown", r.Object.Name).Msg(
+		r.IsIgnore = true
+		log.Debug().Str("unknown", r.Object.Name).Msg(
 			"only Query and Mutation are handled we don't recognize the following")
 	}
 
