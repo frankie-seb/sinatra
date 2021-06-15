@@ -191,6 +191,8 @@ type Config struct {
 
 type HelperPluginConfig struct {
 	PostgresSubModelFiltering bool
+	GenerateFederatedService  bool
+	Schema                    string
 }
 
 type IgnoreTypeMatch struct {
