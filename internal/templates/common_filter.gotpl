@@ -145,10 +145,40 @@ func StringFilterToMods(m *{{ $.GqlModels.PackageName }}.StringFilter, column st
 	}
 
 	if len(m.In) > 0 {
-		queryMods = append(queryMods, qm.WhereIn(column + in, base_helpers.IDsToBoilerInterfaces(m.In)...))
+		isIdCol := false
+		var res []interface{}
+
+		for _, v := range res {
+			if v != nil {
+				isIdCol = true
+			}
+		}
+
+		if isIdCol {
+			res = base_helpers.IDsToBoilerInterfaces(m.In)
+		} else {
+			res = base_helpers.StringsToInterfaces(m.In)
+		}
+
+		queryMods = append(queryMods, qm.WhereIn(column + in, res...))
 	}
 	if len(m.NotIn) > 0 {
-		queryMods = append(queryMods, qm.WhereIn(column + notIn, base_helpers.IDsToBoilerInterfaces(m.NotIn)...))
+		isIdCol := false
+		var res []interface{}
+
+		for _, v := range res {
+			if v != nil {
+				isIdCol = true
+			}
+		}
+
+		if isIdCol {
+			res = base_helpers.IDsToBoilerInterfaces(m.In)
+		} else {
+			res = base_helpers.StringsToInterfaces(m.In)
+		}
+
+		queryMods = append(queryMods, qm.WhereIn(column + notIn, res...))
 	}
 	
 	return queryMods
