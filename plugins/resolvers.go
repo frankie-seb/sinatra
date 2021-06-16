@@ -144,7 +144,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 		extendedFiles = append(extendedFiles, "gqlgen_"+strings.ToLower(getFirstWord(v[0].Name))+".go")
 	}
 
-	extendedFunctions, err := utils.GetFunctionNamesFromDir("resolvers", extendedFiles)
+	extendedFunctions, err := utils.GetResolverFunctionNamesFromDir("resolvers", extendedFiles)
 	if err != nil {
 		log.Err(err).Msg("could not parse user defined functions in resolver")
 	}
