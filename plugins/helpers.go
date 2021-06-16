@@ -539,14 +539,14 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 					isNode:
 					// ignore
 				default:
-					log.Warn().Str("model.field", m.Name+"."+name).Msg("boiler type not available (empty type)")
+					log.Debug().Str("model.field", m.Name+"."+name).Msg("boiler type not available (empty type)")
 				}
 			}
 
 			if boilerField.Name == "" {
 				if m.IsPayload || m.IsFilter || m.IsWhere || m.IsOrdering || m.IsEdge || isPageInfo || isEdges {
 				} else {
-					log.Warn().Str("model.field", m.Name+"."+name).Msg("boiler type not available")
+					log.Debug().Str("model.field", m.Name+"."+name).Msg("boiler type not available")
 					continue
 				}
 			}
