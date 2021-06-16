@@ -139,6 +139,10 @@ type Field struct { //nolint:maligned
 	// Some stuff
 	Description  string
 	OriginalType types.Type
+
+	// For unmapped schema columns
+	IsID      bool
+	IsIDTable string
 }
 
 type Enum struct {
@@ -193,6 +197,12 @@ type HelperPluginConfig struct {
 	PostgresSubModelFiltering bool
 	GenerateFederatedService  bool
 	Schema                    string
+	SchemaIDColumns           *[]SchemaCols
+}
+
+type SchemaCols struct {
+	Column    string
+	TableName string
 }
 
 type IgnoreTypeMatch struct {
@@ -224,12 +234,13 @@ func GetModelsWithInformation(
 	enums []*Enum,
 	cfg *config.Config,
 	boilerModels []*utils.BoilerModel,
-	ignoreTypePrefixes []string) []*Model {
+	ignoreTypePrefixes []string,
+	schemaIDColumns *[]SchemaCols) []*Model {
 	// get models based on the schema and sqlboiler structs
 	models := getModelsFromSchema(cfg.Schema, boilerModels)
 
 	// Now we have all model's let enhance them with fields
-	enhanceModelsWithFields(enums, cfg.Schema, cfg, models, ignoreTypePrefixes)
+	enhanceModelsWithFields(enums, cfg.Schema, cfg, models, ignoreTypePrefixes, schemaIDColumns)
 
 	// Add preload maps
 	enhanceModelsWithPreloadArray(backend, models)
@@ -269,7 +280,7 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 	interfaces, enums, scalars := getExtrasFromSchema(cfg.Schema, boilerEnums)
 
 	log.Debug().Msg("[convert] get model with information")
-	models := GetModelsWithInformation(b.BoilerModels, enums, originalCfg, boilerModels, []string{m.GqlModels.PackageName, m.BoilerModels.PackageName, "base_helpers"})
+	models := GetModelsWithInformation(b.BoilerModels, enums, originalCfg, boilerModels, []string{m.GqlModels.PackageName, m.BoilerModels.PackageName, "base_helpers"}, m.PluginConfig.SchemaIDColumns)
 
 	b.Models = models
 	sort.Slice(b.Models, func(i, j int) bool { return b.Models[i].Name < b.Models[j].Name })
@@ -462,7 +473,7 @@ func getGraphqlFieldName(cfg *config.Config, modelName string, field *ast.FieldD
 
 //nolint:gocognit,gocyclo
 func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Config,
-	models []*Model, ignoreTypePrefixes []string) {
+	models []*Model, ignoreTypePrefixes []string, schemaIDColumns *[]SchemaCols) {
 	binder := cfg.NewBinder()
 
 	// Generate the basic of the fields
@@ -520,6 +531,18 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 			isSortDirection := strings.HasSuffix(m.Name, "Ordering") && name == "Direction"
 			isCursor := strings.HasSuffix(m.Name, "Edge") && name == "Cursor"
 			isNode := strings.HasSuffix(m.Name, "Edge") && name == "Node"
+			IsID := false
+			IsIDTable := ""
+
+			// Check if Schema ID
+			if schemaIDColumns != nil {
+				for _, s := range *schemaIDColumns {
+					if s.Column == name {
+						IsID = true
+						IsIDTable = s.TableName
+					}
+				}
+			}
 
 			// log some warnings when fields could not be converted
 			if boilerField.Type == "" {
@@ -573,7 +596,10 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 				OriginalType:       typ,
 				Description:        field.Description,
 				Enum:               enum,
+				IsID:               IsID,
+				IsIDTable:          IsIDTable,
 			}
+
 			field.ConvertConfig = getConvertConfig(enums, m, field)
 			m.Fields = append(m.Fields, field)
 		}
@@ -906,7 +932,7 @@ func getConvertConfig(enums []*Enum, model *Model, field *Field) (cc ConvertConf
 		// Check if string array col or others
 	} else if graphType != boilType && !checkInIgnoreTypes(boilType, graphType) {
 		cc.IsCustom = true
-		if field.IsPrimaryID || field.IsNumberID && field.BoilerField.IsRelation {
+		if field.IsPrimaryID || field.IsNumberID && field.BoilerField.IsRelation || field.IsID {
 			// TODO: more dynamic and universal
 			cc.ToGraphQL = "VALUE"
 			cc.ToBoiler = "VALUE"
@@ -925,8 +951,10 @@ func getConvertConfig(enums []*Enum, model *Model, field *Field) (cc ConvertConf
 
 			if field.IsPrimaryID {
 				cc.ToGraphQL = model.Name + "IDToGraphQL(" + cc.ToGraphQL + ")"
-			} else if field.IsNumberID {
+			} else if field.IsNumberID && field.BoilerField.IsRelation {
 				cc.ToGraphQL = field.BoilerField.Relationship.Name + "IDToGraphQL(" + cc.ToGraphQL + ")"
+			} else if field.IsNumberID && field.IsID {
+				cc.ToGraphQL = "base_helpers.IDToGraphQL(" + cc.ToGraphQL + ",\"" + field.IsIDTable + "\")"
 			}
 
 			isInt := strings.HasPrefix(strings.ToLower(boilType), "int") && !strings.HasPrefix(strings.ToLower(boilType), "uint")

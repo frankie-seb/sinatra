@@ -64,7 +64,7 @@ func (m *ResolverPlugin) GenerateCode(data *codegen.Data) error {
 	log.Debug().Msg("[resolver] get boiler models")
 	boilerModels, _ := utils.GetBoilerModels(m.boilerModels.Directory)
 	log.Debug().Msg("[resolver] get models with information")
-	models := GetModelsWithInformation(m.boilerModels, nil, data.Config, boilerModels, nil)
+	models := GetModelsWithInformation(m.boilerModels, nil, data.Config, boilerModels, nil, nil)
 	log.Debug().Msg("[resolver] generate file")
 	return m.generatePerSchema(data, models, boilerModels)
 }
