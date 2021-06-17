@@ -39,6 +39,7 @@ type AuthorizationScope struct {
 
 type ResolverPluginConfig struct {
 	AuthorizationScopes []*AuthorizationScope
+	SoftDelete          bool
 }
 
 type ResolverPlugin struct {
@@ -157,6 +158,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 		IsFederatedServer:   data.Config.Federation.IsDefined(),
 		Models:              models,
 		AuthorizationScopes: m.pluginConfig.AuthorizationScopes,
+		SoftDelete:          m.pluginConfig.SoftDelete,
 	}
 
 	// Write Common Resolver
@@ -249,6 +251,7 @@ type ResolverBuild struct {
 	IsFederatedServer   bool
 	Models              []*Model
 	AuthorizationScopes []*AuthorizationScope
+	SoftDelete          bool
 	TryHook             func(string) bool
 }
 

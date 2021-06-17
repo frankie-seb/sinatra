@@ -218,7 +218,7 @@ import (
 					{{- end }}
 				{{- end }}
 			}
-			 if _, err := dm.{{ .Model.PluralName }}(mods...).DeleteAll(ctx, middleware.GetTx(ctx)); err != nil {
+			 if _, err := dm.{{ .Model.PluralName }}(mods...).DeleteAll(ctx, middleware.GetTx(ctx){{- if $.SoftDelete }}, false {{ end -}}); err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
 			}
