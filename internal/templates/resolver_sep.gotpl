@@ -277,7 +277,7 @@ import (
 			}
 
 			boilerIDs := base_helpers.RemovedIDsToBoiler{{.Model.PrimaryKeyType|go}}(IDsToRemove)
-			if _, err := dm.{{ .Model.PluralName }}(dm.{{ .Model.Name }}Where.ID.IN(boilerIDs)).DeleteAll(ctx, middleware.GetTx(ctx)); err != nil {
+			if _, err := dm.{{ .Model.PluralName }}(dm.{{ .Model.Name }}Where.ID.IN(boilerIDs)).DeleteAll(ctx, middleware.GetTx(ctx){{- if $.SoftDelete }}, false {{ end -}}); err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
 			}
