@@ -71,7 +71,7 @@ func appendJoinSubQuery(queryMods []qm.QueryMod, q *queries.Query, to string, vi
 
 	qs, args := queries.BuildQuery(q)
 	qsClean := strings.TrimSuffix(qs, ";")
-	return append(queryMods, qm.Where(fmt.Sprintf("EXISTS(SELECT 1 FROM {{ if $.PluginConfig.Schema }}\"{{ $.PluginConfig.Schema }}\".{{- end }}\"%v\" WHERE (EXISTS(%v AND (%v.%v = %v.id)))", via, qsClean, via, toCol, to), args...))
+	return append(queryMods, qm.Where(fmt.Sprintf("EXISTS(SELECT 1 FROM \"%v\" WHERE (EXISTS(%v AND (%v.%v = %v.id)))", via, qsClean, via, toCol, to), args...))
 }
 
 func BooleanFilterToMods(m *{{ $.GqlModels.PackageName }}.BooleanFilter, column string) []qm.QueryMod {
