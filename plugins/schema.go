@@ -372,7 +372,7 @@ func SchemaGet(
 				if config.GenerateFederatedService {
 					keys := []string{}
 					for _, field := range model.Fields {
-						if utils.IsFieldId(field.Name) {
+						if utils.IsFieldId(field.Name) && !field.BoilerField.IsRelation {
 							keys = append(keys, "@key(fields: \""+field.Name+"\")")
 						}
 					}
