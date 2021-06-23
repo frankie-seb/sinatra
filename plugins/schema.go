@@ -370,7 +370,13 @@ func SchemaGet(
 				// 	organization: Organization!
 				// }
 				if config.GenerateFederatedService {
-					w.l("type " + model.Name + " implements Node @key(fields: \"id\") {")
+					keys := []string{}
+					for _, field := range model.Fields {
+						if utils.IsFieldId(field.Name) {
+							keys = append(keys, "@key(fields: \""+field.Name+"\")")
+						}
+					}
+					w.l("type " + model.Name + " implements Node " + strings.Join(keys, " ") + " {")
 				} else {
 					w.l("type " + model.Name + " implements Node {")
 				}
