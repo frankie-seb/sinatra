@@ -38,13 +38,24 @@ import (
 // const regexSign = `'`
 const percentSign = `%`
 
+const parentTableStatement = "%v.%v = %v.%v"
 func startsWithValue(v string) string { return   v + percentSign   }
 func endsWithValue(v string) string   { return   percentSign + v  }
 func containsValue(v string) string   { return   percentSign + v + percentSign   }
 
+const emptyString = "''"
+const isZero = "0"
 const isLike = " LIKE ?"
 const in = " IN ?"
 const notIn = " NOT IN ?"
+
+func isNullOr(column string, v string) qm.QueryMod {
+	return qm.Where("("+column+" IS NULL OR "+column+" != "+v+")")
+}
+
+func isNotNullOr(column string, v string) qm.QueryMod {
+	return qm.Where("("+column+" IS NOT NULL AND "+column+" != "+v+")")
+}
 
 func appendSubQuery(queryMods []qm.QueryMod, q *queries.Query) []qm.QueryMod {
 	{{- if $.PluginConfig.PostgresSubModelFiltering }}
@@ -79,6 +90,12 @@ func BooleanFilterToMods(m *{{ $.GqlModels.PackageName }}.BooleanFilter, column 
 		return nil
 	}
 	var queryMods []qm.QueryMod
+	if m.IsNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNull(column))
+	}
+	if m.NotNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNotNull(column))
+	}
 	if m.EqualTo != nil {
 		queryMods = append(queryMods, qmhelper.Where(column, qmhelper.EQ, *m.EqualTo))
 	}
@@ -93,6 +110,12 @@ func IDFilterToMods(m *{{ $.GqlModels.PackageName }}.IDFilter, column string) []
 		return nil
 	}
 	var queryMods []qm.QueryMod
+	if m.IsNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNull(column))
+	}
+	if m.NotNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNotNull(column))
+	}
 	if m.EqualTo != nil {
 		queryMods = append(queryMods, qmhelper.Where(column, qmhelper.EQ, base_helpers.IDToBoiler(*m.EqualTo)))
 	}
@@ -116,6 +139,24 @@ func StringFilterToMods(m *{{ $.GqlModels.PackageName }}.StringFilter, column st
 	}
 
 	var queryMods []qm.QueryMod
+	if m.IsNullOrEmpty != nil {
+		queryMods = append(queryMods, isNullOr(column, emptyString))
+	}
+	if m.IsEmpty != nil {
+		queryMods = append(queryMods, qmhelper.Where(column, qmhelper.EQ, emptyString))
+	}
+	if m.IsNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNull(column))
+	}
+	if m.NotNullOrEmpty != nil {
+		queryMods = append(queryMods, isNotNullOr(column, emptyString))
+	}
+	if m.NotEmpty != nil {
+		queryMods = append(queryMods, qmhelper.Where(column, qmhelper.NEQ, emptyString))
+	}
+	if m.NotNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNotNull(column))
+	}
 	if m.EqualTo != nil {
 		queryMods = append(queryMods, qmhelper.Where(column, qmhelper.EQ, *m.EqualTo))
 	}
@@ -190,6 +231,18 @@ func FloatFilterToMods(m *{{ $.GqlModels.PackageName }}.FloatFilter, column stri
 		return nil
 	}
 	var queryMods []qm.QueryMod
+	if m.IsNullOrZero != nil {
+		queryMods = append(queryMods, isNullOr(column, isZero))
+	}
+	if m.IsNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNull(column))
+	}
+	if m.NotNullOrZero != nil {
+		queryMods = append(queryMods, isNotNullOr(column, isZero))
+	}
+	if m.NotNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNotNull(column))
+	}
 	if m.EqualTo != nil {
 		queryMods = append(queryMods, qmhelper.Where(column, qmhelper.EQ, *m.EqualTo))
 	}
@@ -222,6 +275,18 @@ func IntFilterToMods(m *{{ $.GqlModels.PackageName }}.IntFilter, column string) 
 		return nil
 	}
 	var queryMods []qm.QueryMod
+	if m.IsNullOrZero != nil {
+		queryMods = append(queryMods, isNullOr(column, isZero))
+	}
+	if m.IsNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNull(column))
+	}
+	if m.NotNullOrZero != nil {
+		queryMods = append(queryMods, isNotNullOr(column, isZero))
+	}
+	if m.NotNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNotNull(column))
+	}
 	if m.EqualTo != nil {
 		queryMods = append(queryMods, qmhelper.Where(column, qmhelper.EQ, *m.EqualTo))
 	}
@@ -254,6 +319,12 @@ func TimeFilterToMods(m *{{ $.GqlModels.PackageName }}.TimeFilter, column string
 		return nil
 	}
 	var queryMods []qm.QueryMod
+	if m.IsNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNull(column))
+	}
+	if m.NotNull != nil {
+		queryMods = append(queryMods, qmhelper.WhereIsNotNull(column))
+	}
 	if m.EqualTo != nil {
 		queryMods = append(queryMods, qmhelper.Where(column, qmhelper.EQ, *m.EqualTo))
 	}
@@ -275,3 +346,127 @@ func TimeFilterToMods(m *{{ $.GqlModels.PackageName }}.TimeFilter, column string
 	return queryMods
 }
 
+{{ range $enum := .Enums }}
+	func {{ .Name }}FilterToMods(m *{{ $.GqlModels.PackageName }}.{{ .Name }}Filter, column string) []qm.QueryMod {
+		if m == nil {
+			return nil
+		}
+		var queryMods []qm.QueryMod
+		if m.IsNull != nil {
+			queryMods = append(queryMods, qmhelper.WhereIsNull(column))
+		}
+		if m.NotNull != nil {
+			queryMods = append(queryMods, qmhelper.WhereIsNotNull(column))
+		}
+		if m.EqualTo != nil {
+			queryMods = append(queryMods, qmhelper.Where(column, qmhelper.EQ, *m.EqualTo))
+		}
+		if m.NotEqualTo != nil {
+			queryMods = append(queryMods, qmhelper.Where(column, qmhelper.NEQ, *m.NotEqualTo))
+		}
+		if len(m.In) > 0 {
+			queryMods = append(queryMods, qm.WhereIn(column+in, {{ .PluralName }}ToInterfaceArray(m.In)...))
+		}
+		if len(m.NotIn) > 0 {
+			queryMods = append(queryMods, qm.WhereIn(column+notIn, {{ .PluralName }}ToInterfaceArray(m.NotIn)...))
+		}
+		return queryMods
+	}
+{{- end }}
+{{ range $model := .Models }}
+	{{- if .IsFilter -}}
+		func {{ .Name }}ToMods(m *{{ $.GqlModels.PackageName }}.{{ .Name }}) []qm.QueryMod {
+			if m == nil {
+				return nil
+			}
+			if m.Search != nil || m.Where != nil {
+				var queryMods []qm.QueryMod
+				queryMods  = append(queryMods, {{ .BoilerModel.Name }}SearchToMods(m.Search)...)
+				queryMods  = append(queryMods, {{ .BoilerModel.Name }}WhereToMods(m.Where, true, "", "")...)
+				if len(queryMods) > 0 {
+					return []qm.QueryMod{
+						qm.Expr(queryMods...),
+					}
+				}
+			}
+			return nil
+		}
+		func {{ .BoilerModel.Name }}SearchToMods(search *string) []qm.QueryMod {
+			// TODO: implement your own custom search here
+			return nil
+		}
+	{{ end }}
+	{{- if .IsWhere  -}}
+		func {{ .Name }}SubqueryToMods(m *{{ $.GqlModels.PackageName }}.{{ .Name }}, foreignColumn string, parentTable string) []qm.QueryMod {
+			if m == nil {
+				return nil
+			}
+			var queryMods []qm.QueryMod
+			// if foreign key exist so we can filter on ID in the root table instead of subquery
+			hasForeignKeyInRoot := foreignColumn != ""
+			if hasForeignKeyInRoot {
+				queryMods = append(queryMods, IDFilterToMods(m.ID, foreignColumn)...)
+			}
+		
+			subQueryMods := {{ .Name }}ToMods(m, !hasForeignKeyInRoot, parentTable, foreignColumn)
+			if len(subQueryMods) > 0 {
+				subQuery := {{ $.BoilerModels.PackageName }}.{{.BoilerModel.PluralName}}(append(subQueryMods, qm.Select("1"))...)
+				queryMods = appendSubQuery(queryMods, subQuery.Query)
+			}
+			return queryMods
+		} 
+		
+		func {{ .Name }}ToMods(m *{{ $.GqlModels.PackageName }}.{{ .Name }}, withPrimaryID bool, parentTable string, parentForeignKey string) []qm.QueryMod {
+			if m == nil {
+				return nil
+			}
+			var queryMods []qm.QueryMod
+	
+			{{ $model := . }}
+			{{ range $field := .Fields }}
+				{{-  if and $field.IsRelation $field.BoilerField.IsRelation }}
+					{{- if  $field.IsPlural }}
+						queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, "", {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
+					{{- else if $field.BoilerField.IsForeignKey }}
+						queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }}, {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
+					{{- else }}
+						queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, "", {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
+					{{- end }}
+				{{-  else if $field.IsOr  }}
+					if m.Or != nil {
+						queryMods = append(queryMods, qm.Or2(qm.Expr({{ $field.TypeWithoutPointer|go }}ToMods(m.Or, true, "", "")...)))
+					}
+				{{-  else if $field.IsAnd  }}
+					if m.And != nil {
+						queryMods = append(queryMods, qm.Expr({{ $field.TypeWithoutPointer|go }}ToMods(m.And, true, "", "")...))
+					}
+				{{- else }}
+					{{- if  $field.IsPrimaryID }}
+					if withPrimaryID {
+						queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}ToMods(m.{{ $field.Name }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }})...)
+					}
+					{{- else }}
+						queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}ToMods(m.{{ $field.Name }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }})...)
+					{{- end }}
+				{{- end -}}
+			{{ end }}
+			if len(queryMods) > 0 && parentTable != "" && parentForeignKey != "" {
+				{{ range $field := .Fields }}
+					{{- if and $field.IsRelation $field.BoilerField.IsRelation -}}
+						{{- if  not $field.IsPlural -}}
+							{{- if $field.BoilerField.IsForeignKey }}
+								if parentTable == {{ $.BoilerModels.PackageName }}.TableNames.{{ $field.Relationship.BoilerModel.TableName }} {
+									queryMods = append(queryMods, qm.Where(fmt.Sprintf(parentTableStatement, {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }}, parentTable, parentForeignKey)))
+								}
+							{{- end -}}
+						{{- else }}
+							if parentTable == {{ $.BoilerModels.PackageName }}.TableNames.{{ $field.Relationship.BoilerModel.TableName }} {
+								queryMods = append(queryMods, qm.Where(fmt.Sprintf(parentTableStatement, {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.ID, parentTable, parentForeignKey)))
+							}
+						{{- end -}}
+					{{- end -}}
+				{{ end }}
+			}
+			return queryMods
+		}
+	{{ end }}
