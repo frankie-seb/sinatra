@@ -73,12 +73,14 @@ func GetResolverFunctionNamesFromAstFile(node *ast.File) []string {
 		fn, ok := n.(*ast.FuncDecl)
 		if ok {
 			include := false
-			for _, r := range fn.Recv.List {
-				s := fmt.Sprintf("%s", r.Type)
-				include = strings.Contains(s, "queryResolver") || strings.Contains(s, "mutationResolver")
-			}
-			if include {
-				a = append(a, fn.Name.Name)
+			if fn.Recv != nil {
+				for _, r := range fn.Recv.List {
+					s := fmt.Sprintf("%s", r.Type)
+					include = strings.Contains(s, "queryResolver") || strings.Contains(s, "mutationResolver")
+				}
+				if include {
+					a = append(a, fn.Name.Name)
+				}
 			}
 		}
 		return true
