@@ -375,17 +375,7 @@ func SchemaGet(
 					keys := []string{}
 					for _, field := range model.Fields {
 
-						isCustomId := false
-
-						if config.SchemaIDColumns != nil {
-							for _, s := range *config.SchemaIDColumns {
-								if strings.EqualFold(s.Column, field.Name) {
-									isCustomId = true
-								}
-							}
-						}
-
-						if utils.IsFieldId(field.Name) && !field.BoilerField.IsRelation || isCustomId {
+						if strings.EqualFold(strings.ToLower(field.Name), "id") {
 							keys = append(keys, "@key(fields: \""+field.Name+"\")")
 						}
 					}
