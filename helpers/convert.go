@@ -191,6 +191,11 @@ func IDToGraphQL(id uint, tableName string) string {
 	return strcase.ToLowerCamel(tableName) + IDSeparator + strconv.Itoa(int(id))
 }
 
+func IDToGraphQLPointer(id uint, tableName string) *string {
+	str := strcase.ToLowerCamel(tableName) + IDSeparator + strconv.Itoa(int(id))
+	return &str
+}
+
 func StringIDToGraphQL(id string, tableName string) string {
 	return strcase.ToLowerCamel(tableName) + IDSeparator + id
 }
