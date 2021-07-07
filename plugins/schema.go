@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/FrankieHealth/be-base/internal/utils"
+	"github.com/FrankieHealth/be-event/generator/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog/log"
 )
@@ -34,6 +34,7 @@ type SchemaConfig struct {
 	GenerateBatchDelete      bool
 	GenerateBatchUpdate      bool
 	GenerateFederatedService bool
+	SchemaIDColumns          *[]SchemaCols
 	HookShouldAddModel       func(model SchemaModel) bool
 	HookShouldAddField       func(model SchemaModel, field SchemaField) bool
 	HookChangeField          func(model *SchemaModel, field *SchemaField)
@@ -181,7 +182,8 @@ func SchemaGet(
 
 	// Parse models and their fields based on the sqlboiler model directory
 	boilerModels, boilerEnums := utils.GetBoilerModels(config.BoilerModelDirectory.Directory)
-	models := executeHooksOnModels(boilerModelsToModels(boilerModels), config)
+
+	models := executeHooksOnModels(boilerModelsToModels(boilerModels, config.SchemaIDColumns), config)
 
 	grpMod := groupByModelName(models)
 
@@ -372,7 +374,18 @@ func SchemaGet(
 				if config.GenerateFederatedService {
 					keys := []string{}
 					for _, field := range model.Fields {
-						if utils.IsFieldId(field.Name) && !field.BoilerField.IsRelation {
+
+						isCustomId := false
+
+						if config.SchemaIDColumns != nil {
+							for _, s := range *config.SchemaIDColumns {
+								if strings.EqualFold(s.Column, field.Name) {
+									isCustomId = true
+								}
+							}
+						}
+
+						if utils.IsFieldId(field.Name) && !field.BoilerField.IsRelation || isCustomId {
 							keys = append(keys, "@key(fields: \""+field.Name+"\")")
 						}
 					}
@@ -645,12 +658,12 @@ func getFullType(fieldType string, isArray bool, isRequired bool) string {
 	return gType
 }
 
-func boilerModelsToModels(boilerModels []*utils.BoilerModel) []*SchemaModel {
+func boilerModelsToModels(boilerModels []*utils.BoilerModel, schemaIDColumns *[]SchemaCols) []*SchemaModel {
 	a := make([]*SchemaModel, len(boilerModels))
 	for i, boilerModel := range boilerModels {
 		a[i] = &SchemaModel{
 			Name:   boilerModel.Name,
-			Fields: boilerFieldsToFields(boilerModel.Fields),
+			Fields: boilerFieldsToFields(boilerModel.Fields, schemaIDColumns),
 		}
 	}
 	return a
@@ -684,10 +697,10 @@ func executeHooksOnModels(models []*SchemaModel, config SchemaConfig) []*SchemaM
 	return a
 }
 
-func boilerFieldsToFields(boilerFields []*utils.BoilerField) []*SchemaField {
+func boilerFieldsToFields(boilerFields []*utils.BoilerField, schemaIDColumns *[]SchemaCols) []*SchemaField {
 	fields := make([]*SchemaField, len(boilerFields))
 	for i, boilerField := range boilerFields {
-		fields[i] = boilerFieldToField(boilerField)
+		fields[i] = boilerFieldToField(boilerField, schemaIDColumns)
 	}
 	return fields
 }
@@ -722,6 +735,7 @@ func getFinalFullTypeWithRelation(schemaField *SchemaField, parentType ParentTyp
 }
 
 func getFinalFullType(schemaField *SchemaField, parentType ParentType) string {
+
 	alwaysOptional := getAlwaysOptional(parentType)
 	boilerField := schemaField.BoilerField
 	isRequired := boilerField.IsRequired
@@ -751,8 +765,8 @@ func getFieldType(schemaField *SchemaField, parentType ParentType) string {
 	}
 }
 
-func boilerFieldToField(boilerField *utils.BoilerField) *SchemaField {
-	t := toGraphQLType(boilerField)
+func boilerFieldToField(boilerField *utils.BoilerField, schemaIDColumns *[]SchemaCols) *SchemaField {
+	t := toGraphQLType(boilerField, schemaIDColumns)
 	return NewSchemaField(toGraphQLName(boilerField.Name), t, boilerField)
 }
 
@@ -776,15 +790,25 @@ func toGraphQLName(fieldName string) string {
 	return strcase.ToLowerCamel(graphqlName)
 }
 
-func toGraphQLType(boilerField *utils.BoilerField) string {
+func toGraphQLType(boilerField *utils.BoilerField, schemaIDColumns *[]SchemaCols) string {
 	lowerFieldName := strings.ToLower(boilerField.Name)
 	lowerBoilerType := strings.ToLower(boilerField.Type)
+
+	isCustomId := false
+
+	if schemaIDColumns != nil {
+		for _, s := range *schemaIDColumns {
+			if strings.EqualFold(s.Column, boilerField.Name) {
+				isCustomId = true
+			}
+		}
+	}
 
 	if boilerField.IsEnum {
 		return boilerField.Enum.Name
 	}
 
-	if strings.HasSuffix(lowerFieldName, "id") {
+	if strings.HasSuffix(lowerFieldName, "id") || isCustomId {
 		return "ID"
 	}
 	if strings.Contains(lowerBoilerType, "string") {

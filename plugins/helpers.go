@@ -15,7 +15,7 @@ import (
 	"github.com/99designs/gqlgen/codegen/config"
 	gqlgenTemplates "github.com/99designs/gqlgen/codegen/templates"
 	"github.com/99designs/gqlgen/plugin"
-	"github.com/FrankieHealth/be-base/internal/utils"
+	"github.com/FrankieHealth/be-event/generator/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -513,6 +513,7 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 			boilerField := findBoilerFieldOrForeignKey(m.BoilerModel.Fields, name, isObject)
 			isString := strings.Contains(strings.ToLower(boilerField.Type), "string")
 			isNumberID := strings.HasSuffix(name, "ID") && !isString
+
 			isPrimaryNumberID := isPrimaryID && !isString
 
 			isPrimaryStringID := isPrimaryID && isString
@@ -540,6 +541,7 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 					if s.Column == name {
 						IsID = true
 						IsIDTable = s.TableName
+						isNumberID = true
 					}
 				}
 			}
@@ -953,8 +955,10 @@ func getConvertConfig(enums []*Enum, model *Model, field *Field) (cc ConvertConf
 				cc.ToGraphQL = model.Name + "IDToGraphQL(" + cc.ToGraphQL + ")"
 			} else if field.IsNumberID && field.BoilerField.IsRelation {
 				cc.ToGraphQL = field.BoilerField.Relationship.Name + "IDToGraphQL(" + cc.ToGraphQL + ")"
-			} else if field.IsNumberID && field.IsID {
+			} else if field.IsNumberID && field.IsID && !strings.HasPrefix(graphType, "*") {
 				cc.ToGraphQL = "base_helpers.IDToGraphQL(" + cc.ToGraphQL + ",\"" + field.IsIDTable + "\")"
+			} else if field.IsNumberID && field.IsID && strings.HasPrefix(graphType, "*") {
+				cc.ToGraphQL = "base_helpers.IDToGraphQLPointer(" + cc.ToGraphQL + ",\"" + field.IsIDTable + "\")"
 			}
 
 			isInt := strings.HasPrefix(strings.ToLower(boilType), "int") && !strings.HasPrefix(strings.ToLower(boilType), "uint")
