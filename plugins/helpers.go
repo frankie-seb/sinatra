@@ -15,7 +15,7 @@ import (
 	"github.com/99designs/gqlgen/codegen/config"
 	gqlgenTemplates "github.com/99designs/gqlgen/codegen/templates"
 	"github.com/99designs/gqlgen/plugin"
-	"github.com/FrankieHealth/be-event/generator/internal/utils"
+	"github.com/FrankieHealth/be-base/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
