@@ -114,6 +114,18 @@ func GetPreloadsFromContext(ctx context.Context, level string) []string {
 	), level)
 }
 
+func ExistsInContextQuery(ctx context.Context, str string) bool {
+	s := GetPreloadsFromContext(ctx, "")
+
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
 // e.g. sometimes input is deeper and we want
 // createdFlowBlock.block.blockChoice => when we fetch block in database we want to strip flowBlock
 func StripPreloads(preloads []string, prefix string) []string {
