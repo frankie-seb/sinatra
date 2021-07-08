@@ -468,7 +468,7 @@ import (
 				return nil, err
 			}
 
-			c, err := {{ $.BoilerModels.PackageName }}.{{ .BoilerModel.PluralName }}(append(originalMods, paginationMods...)...).Count(ctx, db)
+			c, err := {{ $.BoilerModels.PackageName }}.{{ .BoilerModel.PluralName }}(append(originalMods)...).Count(ctx, db)
 			if err != nil {
 				return nil, err
 			}
