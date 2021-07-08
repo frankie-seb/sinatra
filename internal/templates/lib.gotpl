@@ -470,7 +470,7 @@ import (
 
 			l := base_helpers.ExistsInContextQuery(ctx, "count")
 			var count int
-			if l == true {
+			if l == true && len(originalMods) != 0 {
 				c, err := {{ $.BoilerModels.PackageName }}.{{ .BoilerModel.PluralName }}(append(originalMods)...).Count(ctx, db)
 				if err != nil {
 					return nil, err
