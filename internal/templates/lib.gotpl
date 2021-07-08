@@ -467,6 +467,12 @@ import (
 			if err != nil {
 				return nil, err
 			}
+
+			c, err := {{ $.BoilerModels.PackageName }}.{{ .BoilerModel.PluralName }}(append(originalMods, paginationMods...)...).Count(ctx, db)
+			if err != nil {
+				return nil, err
+			}
+
 			edges := make([]*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Edge, 0, base_helpers.EdgeLength(pagination, len(a)))
 			edgeConverter := {{ .BoilerModel.Name }}EdgeConverter(pagination, ordering)
 			hasMore := base_helpers.BaseConnection(pagination, len(a), func(i int) {
@@ -475,6 +481,7 @@ import (
 			startCursor, endCursor := {{ .BoilerModel.Name }}StartEndCursor(edges)
 			hasNextPage, hasPreviousPage := base_helpers.HasNextAndPreviousPage(pagination, hasMore, hasMoreReversed)
 			return &{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Connection{
+				Count: c,
 				Edges: edges,
 				PageInfo: &{{ $.GqlModels.PackageName }}.PageInfo{
 					HasNextPage:     hasNextPage,

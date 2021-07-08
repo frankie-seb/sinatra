@@ -420,6 +420,7 @@ func SchemaGet(
 				//	pageInfo: PageInfo!
 				//}
 				w.l("type " + model.Name + "Connection {")
+				w.tl(`count: Int`)
 				w.tl(`edges: [` + model.Name + `Edge]`)
 				w.tl(`pageInfo: PageInfo!`)
 				w.l("}")
