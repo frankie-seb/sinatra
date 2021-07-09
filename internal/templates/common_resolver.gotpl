@@ -24,14 +24,12 @@ import (
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-type directiveResolver struct{ *Resolver }
 {{- if .IsFederatedServer }}
 type entityResolver struct{ *Resolver }
 {{ end }}
 
 func (r *Resolver) Mutation() fm.MutationResolver 			  { return &mutationResolver{r} }
 func (r *Resolver) Query() fm.QueryResolver       			  { return &queryResolver{r} }
-func (r *Resolver) __Directive() fm.__DirectiveResolver       { return &directiveResolver{r} }
 {{- if .IsFederatedServer }}
 func (r *Resolver) Entity() fm.EntityResolver     { return &entityResolver{r} }
 {{ end }}
