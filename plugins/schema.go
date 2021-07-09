@@ -117,7 +117,7 @@ func SchemaWrite(config SchemaConfig, outputFile string, generateOptions SchemaG
 		config,
 	)
 
-	// log.Debug().Int("bytes", len(schema)).Msg("Writing GraphQL schema to disk")
+	log.Debug().Int("bytes", len(schema)).Msg("Writing GraphQL schema to disk")
 
 	for _, s := range schema {
 

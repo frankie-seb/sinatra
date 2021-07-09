@@ -273,13 +273,13 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 	}
 	// log.Debug().Msg("[customization] looking for *_customized files")
 
-	// log.Debug().Msg("[convert] get boiler models")
+	log.Debug().Msg("[convert] get boiler models")
 	boilerModels, boilerEnums := utils.GetBoilerModels(m.BoilerModels.Directory)
 
-	// log.Debug().Msg("[convert] get extra's from schema")
+	log.Debug().Msg("[convert] get extra's from schema")
 	interfaces, enums, scalars := getExtrasFromSchema(cfg.Schema, boilerEnums)
 
-	// log.Debug().Msg("[convert] get model with information")
+	log.Debug().Msg("[convert] get model with information")
 	models := GetModelsWithInformation(b.BoilerModels, enums, originalCfg, boilerModels, []string{m.GqlModels.PackageName, m.BoilerModels.PackageName, "base_helpers"}, m.PluginConfig.SchemaIDColumns)
 
 	b.Models = models
@@ -345,7 +345,7 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 
 	for _, fileName := range filesToGenerate {
 		templateName := fileName + "tpl"
-		// log.Debug().Msg("[convert] render " + templateName)
+		log.Debug().Msg("[convert] render " + templateName)
 
 		templateContent, err := getTemplateContent(templateName)
 		if err != nil {
@@ -363,7 +363,7 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 			}); renderError != nil {
 			log.Err(renderError).Msg("error while rendering " + templateName)
 		}
-		// log.Debug().Msg("[convert] rendered " + templateName)
+		log.Debug().Msg("[convert] rendered " + templateName)
 	}
 
 	return nil
@@ -564,14 +564,14 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 					isNode:
 					// ignore
 				default:
-					continue
+					log.Debug().Str("model.field", m.Name+"."+name).Msg("boiler type not available (empty type)")
 				}
 			}
 
 			if boilerField.Name == "" {
 				if m.IsPayload || m.IsFilter || m.IsWhere || m.IsOrdering || m.IsEdge || isPageInfo || isEdges {
 				} else {
-					// log.Debug().Str("model.field", m.Name+"."+name).Msg("boiler type not available")
+					log.Debug().Str("model.field", m.Name+"."+name).Msg("boiler type not available")
 					continue
 				}
 			}
@@ -740,7 +740,7 @@ func getModelsFromSchema(schema *ast.Schema, boilerModels []*utils.BoilerModel) 
 						// silent continue
 						continue
 					}
-					// log.Debug().Str("model", modelName).Msg("skipped, no database model found")
+					log.Debug().Str("model", modelName).Msg("skipped, no database model found")
 					continue
 				}
 

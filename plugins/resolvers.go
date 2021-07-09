@@ -62,11 +62,11 @@ func (m *ResolverPlugin) GenerateCode(data *codegen.Data) error {
 	}
 
 	// Get all models information
-	// log.Debug().Msg("[resolver] get boiler models")
+	log.Debug().Msg("[resolver] get boiler models")
 	boilerModels, _ := utils.GetBoilerModels(m.boilerModels.Directory)
-	// log.Debug().Msg("[resolver] get models with information")
+	log.Debug().Msg("[resolver] get models with information")
 	models := GetModelsWithInformation(m.boilerModels, nil, data.Config, boilerModels, nil, nil)
-	// log.Debug().Msg("[resolver] generate file")
+	log.Debug().Msg("[resolver] generate file")
 	return m.generatePerSchema(data, models, boilerModels)
 }
 
@@ -208,6 +208,9 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 					enhanceResolver(resolver, models)
 					if resolver.Model.BoilerModel != nil && resolver.Model.BoilerModel.Name != "" {
 						file.Resolvers = append(file.Resolvers, resolver)
+					} else if resolver.Field.GoFieldName != "Node" {
+						log.Debug().Str("resolver", resolver.Object.Name).Str("field", resolver.Field.GoFieldName).Msg(
+							"skipping resolver since no model found")
 					}
 				}
 			}
@@ -356,8 +359,8 @@ func enhanceResolver(r *Resolver, models []*Model) { //nolint:gocyclo
 		// TODO: generate helpers for subscription
 	default:
 		r.IsIgnore = true
-		// log.Debug().Str("unknown", r.Object.Name).Msg(
-		// 	"only Query and Mutation are handled we don't recognize the following")
+		log.Debug().Str("unknown", r.Object.Name).Msg(
+			"only Query and Mutation are handled we don't recognize the following")
 	}
 
 	lmName := strcase.ToLowerCamel(model.Name)
