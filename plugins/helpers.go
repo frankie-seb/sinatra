@@ -564,7 +564,7 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 					isNode:
 					// ignore
 				default:
-					// log.Debug().Str("model.field", m.Name+"."+name).Msg("boiler type not available (empty type)")
+					continue
 				}
 			}
 

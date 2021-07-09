@@ -208,9 +208,6 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 					enhanceResolver(resolver, models)
 					if resolver.Model.BoilerModel != nil && resolver.Model.BoilerModel.Name != "" {
 						file.Resolvers = append(file.Resolvers, resolver)
-					} else if resolver.Field.GoFieldName != "Node" {
-						// log.Debug().Str("resolver", resolver.Object.Name).Str("field", resolver.Field.GoFieldName).Msg(
-						// 	"skipping resolver since no model found")
 					}
 				}
 			}
