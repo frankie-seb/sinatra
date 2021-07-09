@@ -186,12 +186,12 @@ func GetBoilerModels(dir string) ([]*BoilerModel, []*BoilerEnum) { //nolint:goco
 				field.Enum = *enumForField
 			}
 
-			// if field.IsRelation && field.Relationship == nil {
-			// 	log.Debug().Str("model", model.Name).Str("field", field.Name).Msg(
-			// 		"We could not find the relationship and marked this field as non-relational \n")
-			// 	field.IsRelation = false
-			// 	field.IsForeignKey = false
-			// }
+			if field.IsRelation && field.Relationship == nil {
+				// log.Debug().Str("model", model.Name).Str("field", field.Name).Msg(
+				// 	"We could not find the relationship and marked this field as non-relational \n")
+				field.IsRelation = false
+				field.IsForeignKey = false
+			}
 		}
 	}
 
