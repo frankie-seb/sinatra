@@ -21,7 +21,7 @@ require (
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spf13/viper v1.8.0
 	github.com/stretchr/testify v1.7.0 // indirect
-	github.com/vektah/gqlparser/v2 v2.2.0
+	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/volatiletech/null/v8 v8.1.2 // indirect
 	github.com/volatiletech/sqlboiler/v4 v4.6.0 // indirect
 	github.com/volatiletech/strmangle v0.0.1
