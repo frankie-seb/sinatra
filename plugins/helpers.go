@@ -19,7 +19,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/vektah/gqlparser/v2@v2.1.0/ast"
+	"github.com/vektah/gqlparser/v2/ast"
 )
 
 var pathRegex *regexp.Regexp //nolint:gochecknoglobals
