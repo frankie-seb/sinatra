@@ -15,6 +15,8 @@ import (
 
 var pathRegex *regexp.Regexp //nolint:gochecknoglobals
 
+var gopaths []string
+
 func GetRootImportPath() string {
 	importPath, err := rootImportPath()
 	if err != nil {
