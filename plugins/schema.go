@@ -62,6 +62,7 @@ type SchemaField struct {
 	BoilerField          *utils.BoilerField
 	SkipInput            bool
 	SkipWhere            bool
+	SkipSort             bool
 	SkipCreate           bool
 	SkipUpdate           bool
 	SkipBatchUpdate      bool
@@ -116,8 +117,6 @@ func SchemaWrite(config SchemaConfig, outputFile string, generateOptions SchemaG
 	schema := SchemaGet(
 		config,
 	)
-
-	// log.Debug().Int("bytes", len(schema)).Msg("Writing GraphQL schema to disk")
 
 	for _, s := range schema {
 
@@ -178,7 +177,6 @@ func SchemaGet(
 	d := []SchemaArr{}
 	g := &SimpleWriter{}
 	e := &SimpleWriter{}
-	// dir := &SimpleWriter{}
 
 	// Parse models and their fields based on the sqlboiler model directory
 	boilerModels, boilerEnums := utils.GetBoilerModels(config.BoilerModelDirectory.Directory)
@@ -389,7 +387,7 @@ func SchemaGet(
 					// organizationID is clutter in your scheme
 					// you only want Organization and OrganizationID should be skipped
 					directives := getDirectivesAsString(field.Directives)
-					if field.BoilerField.IsRelation {
+					if field.BoilerField != nil && field.BoilerField.IsRelation {
 						w.tl(
 							getRelationName(field) + ": " +
 								getFinalFullTypeWithRelation(field, ParentTypeNormal) + directives,
@@ -627,7 +625,7 @@ func enhanceFields(config SchemaConfig, model *SchemaModel, fields []*SchemaFiel
 func fieldAsEnumStrings(fields []*SchemaField) []string {
 	var enums []string
 	for _, field := range fields {
-		if field.BoilerField != nil && (!field.BoilerField.IsRelation && !field.BoilerField.IsForeignKey) {
+		if field.BoilerField != nil && !field.SkipSort && (!field.BoilerField.IsRelation && !field.BoilerField.IsForeignKey) {
 			enums = append(enums, strcase.ToScreamingSnake(field.Name))
 		}
 	}
@@ -728,13 +726,18 @@ func getFinalFullTypeWithRelation(schemaField *SchemaField, parentType ParentTyp
 func getFinalFullType(schemaField *SchemaField, parentType ParentType) string {
 
 	alwaysOptional := getAlwaysOptional(parentType)
-	boilerField := schemaField.BoilerField
-	isRequired := boilerField.IsRequired
+	isRequired := false
+	isArray := false
+	if schemaField.BoilerField != nil {
+		boilerField := schemaField.BoilerField
+		isRequired = boilerField.IsRequired
+		isArray = boilerField.IsArray
+	}
 	if alwaysOptional {
 		isRequired = false
 	}
 
-	return getFullType(getFieldType(schemaField, parentType), boilerField.IsArray, isRequired)
+	return getFullType(getFieldType(schemaField, parentType), isArray, isRequired)
 }
 
 func getFieldType(schemaField *SchemaField, parentType ParentType) string {
