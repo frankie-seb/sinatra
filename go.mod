@@ -23,7 +23,8 @@ require (
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/volatiletech/null/v8 v8.1.2 // indirect
-	github.com/volatiletech/sqlboiler/v4 v4.6.0 // indirect
+	github.com/volatiletech/sqlboiler v3.7.1+incompatible
+	github.com/volatiletech/sqlboiler/v4 v4.6.0
 	github.com/volatiletech/strmangle v0.0.1
 	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
 	golang.org/x/mod v0.4.2
