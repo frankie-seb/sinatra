@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/99designs/gqlgen v0.13.0
 	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
+	github.com/FrankieHealth/be-base/helpers v0.0.0-20210716053458-4d460de21497
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/dave/dst v0.26.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible

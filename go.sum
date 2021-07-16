@@ -46,6 +46,8 @@ github.com/DATA-DOG/go-sqlmock v1.5.0 h1:Shsta01QNfFxHCfpW6YH2STWB0MudeXXEWMr20O
 github.com/DATA-DOG/go-sqlmock v1.5.0/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/FrankieHealth/be-base/helpers v0.0.0-20210616081125-1a540413e360 h1:PiFdS6Rce0YzL9XRZh7czgZIPCVOg6PSFHrNJxLrCg0=
 github.com/FrankieHealth/be-base/helpers v0.0.0-20210616081125-1a540413e360/go.mod h1:C/FqXmy//5LAZ4YjegaTMKpqDt7YRDGATWMdQ232+sw=
+github.com/FrankieHealth/be-base/helpers v0.0.0-20210716053458-4d460de21497 h1:PncIG2BKn+MFvZr42d5z4taVnIPhAsdgzSBAqaqSiNA=
+github.com/FrankieHealth/be-base/helpers v0.0.0-20210716053458-4d460de21497/go.mod h1:eHNov3PtsEzgHF+JTxjYfRfpREITTlU305+x/RT13J0=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/agnivade/levenshtein v1.0.1/go.mod h1:CURSv5d9Uaml+FovSIICkLbAUZ9S4RqaHDIsdSBg7lM=
 github.com/agnivade/levenshtein v1.0.3/go.mod h1:4SFRZbbXWLF4MU1T9Qg0pGgH3Pjs+t6ie5efyrwRJXs=
