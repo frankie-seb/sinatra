@@ -62,7 +62,7 @@ import (
 				{{- end }}
 			{{- end }}
 
-			m, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx))
+			m, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx, false))
 			if err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
@@ -81,9 +81,9 @@ import (
 
 			mods = append(mods, {{.Model.Name}}FilterToMods(filter)...)
 			{{- if .IsListBackward }}
-				connection, err := {{.Model.Name}}Connection(ctx, middleware.GetTx(ctx), mods, base_helpers.NewBackwardPagination(last, before), ordering)
+				connection, err := {{.Model.Name}}Connection(ctx, middleware.GetTx(ctx, false), mods, base_helpers.NewBackwardPagination(last, before), ordering)
 			{{- else }}
-				connection, err := {{.Model.Name}}Connection(ctx, middleware.GetTx(ctx), mods, base_helpers.NewForwardPagination(first, after), ordering)
+				connection, err := {{.Model.Name}}Connection(ctx, middleware.GetTx(ctx, false), mods, base_helpers.NewForwardPagination(first, after), ordering)
 			{{- end }}
 			if err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
@@ -107,7 +107,7 @@ import (
 						{{- end }}
 
 						// TODO: create the nested relations of {{ $field.Name }}Input if they exist
-						if err := {{ $field.JSONName }}.Insert(ctx, middleware.GetTx(ctx), boil.Infer()); err != nil {
+						if err := {{ $field.JSONName }}.Insert(ctx, middleware.GetTx(ctx, true), boil.Infer()); err != nil {
 							log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 							return nil, errors.New({{ $resolver.PublicErrorKey }})
 						}
@@ -123,7 +123,7 @@ import (
 				{{- end }}
 			{{- end }}
 
-			if err := m.Insert(ctx, middleware.GetTx(ctx), boil.Infer()); err != nil {
+			if err := m.Insert(ctx, middleware.GetTx(ctx, true), boil.Infer()); err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
 			}
@@ -131,7 +131,7 @@ import (
 			// resolve requested fields after creating
 			mods := Get{{ .Model.Name }}PreloadModsWithLevel(ctx, {{ .Model.Name }}PayloadPreloadLevels.{{ .Model.Name }})
 			mods = append(mods, dm.{{ .Model.Name }}Where.ID.EQ(m.ID))
-			pM, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx))
+			pM, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx, false))
 			if err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
@@ -164,7 +164,7 @@ import (
 									),
 								{{- end }}
 							{{- end }}
-						).UpdateAll(ctx, middleware.GetTx(ctx), nestedM); err != nil {
+						).UpdateAll(ctx, middleware.GetTx(ctx, true), nestedM); err != nil {
 							log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 							return nil, errors.New({{ $resolver.PublicErrorKey }})
 						}
@@ -181,7 +181,7 @@ import (
 						dm.{{ $resolver.Model.Name }}Where.{{ $scope.BoilerColumnName }}.EQ({{ $scope.ImportAlias }}.{{ $scope.ScopeResolverName }}(ctx)),
 					{{- end }}
 				{{- end }}
-			).UpdateAll(ctx, middleware.GetTx(ctx), m); err != nil {
+			).UpdateAll(ctx, middleware.GetTx(ctx, true), m); err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
 			}
@@ -195,7 +195,7 @@ import (
 				{{- end }}
 			{{- end }}
 
-			pM, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx))
+			pM, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx, false))
 			if err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
@@ -218,7 +218,7 @@ import (
 					{{- end }}
 				{{- end }}
 			}
-			 if _, err := dm.{{ .Model.PluralName }}(mods...).DeleteAll(ctx, middleware.GetTx(ctx){{- if $.SoftDelete }}, false {{ end -}}); err != nil {
+			 if _, err := dm.{{ .Model.PluralName }}(mods...).DeleteAll(ctx, middleware.GetTx(ctx, true){{- if $.SoftDelete }}, false {{ end -}}); err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
 			}
@@ -245,7 +245,7 @@ import (
 			mods = append(mods, {{.Model.Name}}FilterToMods(filter)...)
 
 			m := {{ .InputModel.Name }}ToModelM(base_helpers.GetInputFromContext(ctx, inputKey), input)
-			if _, err := dm.{{ .Model.PluralName }}(mods...).UpdateAll(ctx, middleware.GetTx(ctx), m); err != nil {
+			if _, err := dm.{{ .Model.PluralName }}(mods...).UpdateAll(ctx, middleware.GetTx(ctx, true), m); err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
 			}
@@ -271,13 +271,13 @@ import (
 			{{- else }}
 			var IDsToRemove []base_helpers.RemovedID
 			{{- end }}
-			if err := dm.{{ .Model.PluralName }}(mods...).Bind(ctx, middleware.GetTx(ctx), &IDsToRemove); err != nil {
+			if err := dm.{{ .Model.PluralName }}(mods...).Bind(ctx, middleware.GetTx(ctx, false), &IDsToRemove); err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
 			}
 
 			boilerIDs := base_helpers.RemovedIDsToBoiler{{.Model.PrimaryKeyType|go}}(IDsToRemove)
-			if _, err := dm.{{ .Model.PluralName }}(dm.{{ .Model.Name }}Where.ID.IN(boilerIDs)).DeleteAll(ctx, middleware.GetTx(ctx){{- if $.SoftDelete }}, false {{ end -}}); err != nil {
+			if _, err := dm.{{ .Model.PluralName }}(dm.{{ .Model.Name }}Where.ID.IN(boilerIDs)).DeleteAll(ctx, middleware.GetTx(ctx, true){{- if $.SoftDelete }}, false {{ end -}}); err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
 			}
