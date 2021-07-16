@@ -22,6 +22,7 @@ import (
 	"github.com/volatiletech/null/v8"
 
 	base_helpers "github.com/FrankieHealth/be-base/helpers"
+	"github.com/FrankieHealth/be-base/middleware"
 
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
