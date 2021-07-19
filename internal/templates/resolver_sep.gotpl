@@ -132,7 +132,7 @@ import (
 			// resolve requested fields after creating
 			mods := Get{{ .Model.Name }}PreloadModsWithLevel(ctx, {{ .Model.Name }}PayloadPreloadLevels.{{ .Model.Name }})
 			mods = append(mods, dm.{{ .Model.Name }}Where.ID.EQ(m.ID))
-			pM, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx, false))
+			pM, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx, true))
 			if err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
@@ -196,7 +196,7 @@ import (
 				{{- end }}
 			{{- end }}
 
-			pM, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx, false))
+			pM, err := dm.{{ .Model.PluralName }}(mods...).One(ctx, middleware.GetTx(ctx, true))
 			if err != nil {
 				log.Error().Err(err).Msg({{ $resolver.PublicErrorKey }})
 				return nil, errors.New({{ $resolver.PublicErrorKey }})
