@@ -414,6 +414,7 @@ import (
 		) (bool, error) {
 			reverse := pagination.Forward != nil
 			cursor, reverseMods := {{ .BoilerModel.Name }}PaginationModsBase(pagination, ordering, reverse, 1)
+			reverseMods = append(reverseMods, qm.GroupBy("id"))
 			cursorType := {{ .BoilerModel.Name }}CursorType(ordering)
 			return base_helpers.HasReversePage(cursor, pagination, cursorType, func() (int64, error) {
 				return {{ $.BoilerModels.PackageName }}.{{ .BoilerModel.PluralName }}(reverseMods...).Count(ctx, db)
