@@ -282,7 +282,7 @@ func SchemaGet(
 
 				// lists
 				arguments := []string{
-					"first: Int",
+					"first: Int!",
 					"after: String",
 					"ordering: [" + model.Name + "Ordering!]",
 					"filter: " + model.Name + "Filter",
