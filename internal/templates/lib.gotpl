@@ -229,12 +229,12 @@ import (
 			}
 		
 			subQueryMods := {{ .Name }}ToMods(m, !hasForeignKeyInRoot, parentTable)
+			subQuery := {{ $.BoilerModels.PackageName }}.{{.BoilerModel.PluralName}}(append(subQueryMods, qm.Select("1"))...)
 			if len(subQueryMods) > 0 {
 				if len(subQueryMods) > 0 && parentTable != "" && foreignColumn != "" {
 					subQueryMods = append(subQueryMods, qm.Where(fmt.Sprintf("%v.id = %v.%v", models.TableNames.{{ .BoilerModel.Name }}, parentTable, foreignColumn)))
 				}
 				
-				subQuery := {{ $.BoilerModels.PackageName }}.{{.BoilerModel.PluralName}}(append(subQueryMods, qm.Select("1"))...)
 				{{- if not .JoinArray }}
 				queryMods = appendSubQuery(queryMods, subQuery.Query)
 				{{- end}}
