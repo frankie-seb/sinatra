@@ -245,7 +245,10 @@ import (
 						queryMods = append(queryMods, qm.Where(fmt.Sprintf("{{$value.From}}.id = {{$value.Via}}.{{$value.FromCol}})")))
 					}
 				{{- end -}}
+			} else if len(subQueryMods) > 0 {
+				queryMods = appendSubQuery(queryMods, subQuery.Query)
 			}
+			
 			return queryMods
 		} 
 	{{ end }}
