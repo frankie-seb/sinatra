@@ -286,7 +286,7 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 				func {{ $model.BoilerModel.Name }}SortCursorValue(sort {{ $.GqlModels.PackageName }}.{{ $model.BoilerModel.Name }}Sort, m *{{ $.GqlModels.PackageName }}.{{ $model.BoilerModel.Name }}) interface{} {
 					switch sort {
 					{{- range $value := $field.Enum.Values }}
-						{{- if eq $value.Name "RANDOM" -}}
+						{{- if not $value.Name "RANDOM" -}}
 						case {{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }}:
 						return m.{{ .NameLower|go }}
 						{{- end -}}
