@@ -347,6 +347,7 @@ func SchemaGet(
 				for _, v := range fieldAsEnumStrings(model.Fields) {
 					w.tl(v)
 				}
+				w.l("RANDOM")
 				w.l("}")
 
 				w.br()
