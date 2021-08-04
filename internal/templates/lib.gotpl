@@ -299,6 +299,12 @@ import (
 					{{- end -}}
 				{{- end -}}
 				value := {{ .BoilerModel.Name }}SortCursorValue(order.Sort, m)
+				switch value.(type) {
+				case *time.Time:
+					value = value.(*time.Time).Local().UTC().Format(time.RFC3339)
+				case time.Time:
+					value = value.(time.Time).Local().UTC().Format(time.RFC3339)
+				}
 				if value != nil {
 					a = append(a, base_helpers.ToCursorValue(string(order.Sort), value))
 				}
