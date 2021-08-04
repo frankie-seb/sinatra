@@ -206,7 +206,7 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 			{{ range $field := .Fields }}
 				{{- if not $field.IsJSON -}}
 					{{-  if and $field.IsRelation $field.BoilerField.IsRelation }}
-						{{- if  $field.IsPlural }}
+						{{- if $field.IsPlural }}
 							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, "", {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
 						{{- else if $field.BoilerField.IsForeignKey }}
 							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }}, {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
@@ -222,7 +222,7 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 							queryMods = append(queryMods, qm.Expr({{ $field.TypeWithoutPointer|go }}ToMods(m.And, true, "")...))
 						}
 					{{- else }}
-						{{- if  $field.IsPrimaryID }}
+						{{- if $field.IsPrimaryID }}
 						if withPrimaryID {
 							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}ToMods(m.{{ $field.Name }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }})...)
 						}
@@ -235,7 +235,7 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 
 			if len(queryMods) > 0 && parentTable != "" {
 				{{ range $field := .Fields }}
-					{{- if  not $field.IsPlural -}}
+					{{- if not $field.IsPlural -}}
 						{{-  if and $field.IsRelation $field.BoilerField.IsRelation  -}}
 							{{- if $field.BoilerField.IsForeignKey }}
 								if parentTable == {{ $.BoilerModels.PackageName }}.TableNames.{{ $field.Relationship.BoilerModel.TableName }} {
@@ -286,7 +286,8 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 				func {{ $model.BoilerModel.Name }}SortCursorValue(sort {{ $.GqlModels.PackageName }}.{{ $model.BoilerModel.Name }}Sort, m *{{ $.GqlModels.PackageName }}.{{ $model.BoilerModel.Name }}) interface{} {
 					switch sort {
 					{{- range $value := $field.Enum.Values }}
-						{{- if not $value.Name "RANDOM" -}}
+						{{- if eq $value.Name "RANDOM" -}}
+						{{- else }}
 						case {{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }}:
 						return m.{{ .NameLower|go }}
 						{{- end -}}
