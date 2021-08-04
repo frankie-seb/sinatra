@@ -263,7 +263,10 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 			{{- if eq $field.Name "Sort" -}}
 				var {{ $field.Enum.Name }}Column = map[{{ $.GqlModels.PackageName }}.{{$field.Enum.Name}}]string{
 					{{- range $value := $field.Enum.Values}}
+						{{- if eq $value.Name "RANDOM" -}}
+						{{- else }}
 							{{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }}: {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $value.NameLower|go }},
+						{{- end -}}
 					{{- end }}
 				}
 
