@@ -362,14 +362,14 @@ import (
 				{{- end -}}
 
 				column := {{ .BoilerModel.Name }}SortColumn[order.Sort]
-				if column != "" && column != "RANDOM"  {
+				if column != ""  {
 					a = append(a, qm.OrderBy(base_helpers.GetOrderBy(
 						column,
 						base_helpers.GetDirection(order.Direction, reverse),
 					)))
 				}
 				// TODO allow non-postres databases
-				if column == "RANDOM" {
+				if order.Sort == "RANDOM" {
 					a = append(a, qm.OrderBy("RANDOM()"))
 				}
 			}
