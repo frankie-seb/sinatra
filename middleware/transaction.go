@@ -11,6 +11,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 type ContextKey struct {
@@ -56,6 +58,7 @@ func (rw *responsewriter) Done() (int64, error) {
 func TransactionHandler(db *sql.DB, paths []string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			boil.SetDB(db)
 
 			// Stop introspection queries
 			var b map[string]interface{}
@@ -69,7 +72,7 @@ func TransactionHandler(db *sql.DB, paths []string) func(http.Handler) http.Hand
 				next.ServeHTTP(w, r)
 			} else {
 				ctx := r.Context()
-				tx, _ := db.Begin()
+				tx, _ := boil.BeginTx(ctx, nil)
 				ctx = context.WithValue(ctx, TxCtxKey, tx)
 				r = r.WithContext(ctx)
 				mw := &responsewriter{w: w}
@@ -101,6 +104,10 @@ func TransactionHandler(db *sql.DB, paths []string) func(http.Handler) http.Hand
 	}
 }
 
-func GetTx(ctx context.Context) *sql.Tx {
-	return ctx.Value(TxCtxKey).(*sql.Tx)
+func GetTx(ctx context.Context, tx bool) (contextExecutor boil.ContextExecutor) {
+	if tx {
+		return boil.ContextExecutor(ctx.Value(TxCtxKey).(*sql.Tx))
+	} else {
+		return boil.ContextExecutor(ctx.Value("db").(*sql.DB))
+	}
 }

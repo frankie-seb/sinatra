@@ -142,7 +142,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 	extendedFiles := []string{"directives.go", "resolver.go", "auth.go"}
 
 	for _, v := range rMod {
-		extendedFiles = append(extendedFiles, "gqlgen_"+strings.ToLower(getFirstWord(v[0].Name))+".go")
+		extendedFiles = append(extendedFiles, strings.ToLower(getFirstWord(v[0].Name))+"_gen.go")
 	}
 
 	extendedFunctions, err := utils.GetResolverFunctionNamesFromDir("resolvers", extendedFiles)
@@ -216,7 +216,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 
 		resolverBuild.Models = v
 
-		utils.WriteTemplateFile(dir+"/resolvers/gqlgen_"+strings.ToLower(getFirstWord(v[0].Name))+".go", utils.Options{
+		utils.WriteTemplateFile(dir+"/resolvers/"+strings.ToLower(getFirstWord(v[0].Name))+"_gen.go", utils.Options{
 			Template:             templateContent,
 			PackageName:          data.Config.Resolver.Package,
 			Data:                 resolverBuild,

@@ -1,11 +1,9 @@
-package utils
+package base_helpers
 
 import (
 	"context"
 	"fmt"
 	"net/http"
-
-	base_helpers "github.com/FrankieHealth/be-base/helpers"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/sessions"
@@ -97,7 +95,7 @@ func GetAuthFromContext(ctx context.Context) *UserClaims {
 func GetUserIDFromContext(ctx context.Context) int {
 	user := GetAuthFromContext(ctx)
 	if user != nil {
-		return int(base_helpers.IDToBoiler(user.UserID))
+		return int(IDToBoiler(user.UserID))
 	}
 	return 0
 }

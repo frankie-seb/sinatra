@@ -121,16 +121,16 @@ func SchemaWrite(config SchemaConfig, outputFile string, generateOptions SchemaG
 	for _, s := range schema {
 
 		if utils.FileExists(outputFile) && generateOptions.MergeSchema {
-			if err := mergeContentInFile(s.Data, outputFile+"schema/gqlgen_"+s.Name+".graphql"); err != nil {
+			if err := mergeContentInFile(s.Data, outputFile+"schema/"+s.Name+"_gen.graphql"); err != nil {
 				log.Err(err).Msg("Could not write schema to disk")
 				return err
 			}
 		} else {
-			if err := writeContentToFile(s.Data, outputFile+"schema/gqlgen_"+strings.ToLower(s.Name)+".graphql"); err != nil {
+			if err := writeContentToFile(s.Data, outputFile+"schema/"+strings.ToLower(s.Name)+"_gen.graphql"); err != nil {
 				log.Err(err).Msg("Could not write schema to disk")
 				return err
 			}
-			formatFile(outputFile + "schema/gqlgen_" + strings.ToLower(s.Name) + ".graphql")
+			formatFile(outputFile + "schema/" + strings.ToLower(s.Name) + "_gen.graphql")
 		}
 	}
 
@@ -347,6 +347,7 @@ func SchemaGet(
 				for _, v := range fieldAsEnumStrings(model.Fields) {
 					w.tl(v)
 				}
+				w.l("RANDOM")
 				w.l("}")
 
 				w.br()

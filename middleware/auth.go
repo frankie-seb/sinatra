@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	ut "github.com/FrankieHealth/be-base/internal/utils"
+	ut "github.com/FrankieHealth/be-base/helpers"
 )
 
 // Middleware decodes the token
@@ -23,7 +23,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 // TokenFromHTTPRequestgo - get jwt token from request
 func UserFromHTTPRequestgo(r *http.Request) (ut.UserClaims, error) {
-	reqToken := r.Header.Get("User")
+	reqToken := r.Header.Get("user")
 	data := ut.UserClaims{}
 	err := json.Unmarshal([]byte(reqToken), &data)
 

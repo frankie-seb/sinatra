@@ -229,12 +229,12 @@ import (
 			}
 		
 			subQueryMods := {{ .Name }}ToMods(m, !hasForeignKeyInRoot, parentTable)
+			subQuery := {{ $.BoilerModels.PackageName }}.{{.BoilerModel.PluralName}}(append(subQueryMods, qm.Select("1"))...)
 			if len(subQueryMods) > 0 {
 				if len(subQueryMods) > 0 && parentTable != "" && foreignColumn != "" {
 					subQueryMods = append(subQueryMods, qm.Where(fmt.Sprintf("%v.id = %v.%v", models.TableNames.{{ .BoilerModel.Name }}, parentTable, foreignColumn)))
 				}
 				
-				subQuery := {{ $.BoilerModels.PackageName }}.{{.BoilerModel.PluralName}}(append(subQueryMods, qm.Select("1"))...)
 				{{- if not .JoinArray }}
 				queryMods = appendSubQuery(queryMods, subQuery.Query)
 				{{- end}}
@@ -245,7 +245,10 @@ import (
 						queryMods = append(queryMods, qm.Where(fmt.Sprintf("{{$value.From}}.id = {{$value.Via}}.{{$value.FromCol}})")))
 					}
 				{{- end -}}
+			} else if len(subQueryMods) > 0 {
+				queryMods = appendSubQuery(queryMods, subQuery.Query)
 			}
+			
 			return queryMods
 		} 
 	{{ end }}
@@ -296,6 +299,12 @@ import (
 					{{- end -}}
 				{{- end -}}
 				value := {{ .BoilerModel.Name }}SortCursorValue(order.Sort, m)
+				switch value.(type) {
+				case *time.Time:
+					value = value.(*time.Time).Local().UTC().Format(time.RFC3339Nano)
+				case time.Time:
+					value = value.(time.Time).Local().UTC().Format(time.RFC3339Nano)
+				}
 				if value != nil {
 					a = append(a, base_helpers.ToCursorValue(string(order.Sort), value))
 				}
@@ -353,11 +362,15 @@ import (
 				{{- end -}}
 
 				column := {{ .BoilerModel.Name }}SortColumn[order.Sort]
-				if column != "" {
+				if column != ""  {
 					a = append(a, qm.OrderBy(base_helpers.GetOrderBy(
 						column,
 						base_helpers.GetDirection(order.Direction, reverse),
 					)))
+				}
+				// TODO allow non-postres databases
+				if order.Sort == "RANDOM" {
+					a = append(a, qm.OrderBy("RANDOM()"))
 				}
 			}
 			if !handledID {
@@ -408,12 +421,13 @@ import (
 		
 		func {{ .BoilerModel.Name }}ReversePageInformation(
 			ctx context.Context,
-			db *sql.Tx,
+			db boil.ContextExecutor,
 			pagination base_helpers.ConnectionPagination,
 			ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering,
 		) (bool, error) {
 			reverse := pagination.Forward != nil
 			cursor, reverseMods := {{ .BoilerModel.Name }}PaginationModsBase(pagination, ordering, reverse, 1)
+			reverseMods = append(reverseMods, qm.GroupBy("id"))
 			cursorType := {{ .BoilerModel.Name }}CursorType(ordering)
 			return base_helpers.HasReversePage(cursor, pagination, cursorType, func() (int64, error) {
 				return {{ $.BoilerModels.PackageName }}.{{ .BoilerModel.PluralName }}(reverseMods...).Count(ctx, db)
@@ -448,7 +462,7 @@ import (
 		
 		func {{ .BoilerModel.Name }}Connection(
 			ctx context.Context,
-			db *sql.Tx,
+			db boil.ContextExecutor,
 			originalMods []qm.QueryMod,
 			pagination base_helpers.ConnectionPagination,
 			ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering,

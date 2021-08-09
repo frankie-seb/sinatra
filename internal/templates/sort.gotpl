@@ -233,7 +233,7 @@ import (
 
 		func {{ .BoilerModel.Name }}ReversePageInformation(
 			ctx context.Context,
-			db *sql.Tx,
+			db boil.ContextExecutor,
 			pagination base_helpers.ConnectionPagination,
 			ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering,
 		) (bool, error) {
@@ -273,7 +273,7 @@ import (
 
 		func {{ .BoilerModel.Name }}Connection(
 			ctx context.Context,
-			db *sql.Tx,
+			db boil.ContextExecutor,
 			originalMods []qm.QueryMod,
 			pagination base_helpers.ConnectionPagination,
 			ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering,
