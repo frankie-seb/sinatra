@@ -1,0 +1,25 @@
+# Where should the database models go?
+model:
+  dirname: model
+  package: generated
+# Where should the generated helpers go?
+helper:
+  dirname: helpers
+  package: helpers
+# Where should the graphql models go?
+graph:
+  dirname: graph
+  package: graph
+# Where should the generated schema go?
+schema:
+  dirname: schema
+  package: schema
+# Where should the generated resolvers go?
+resolver:
+  dirname: resolvers
+  package: resolvers
+  type: separated
+# Uncomment to enable federation
+# federation:
+#   dirname: federation
+#   package: federation
