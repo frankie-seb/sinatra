@@ -1,4 +1,4 @@
-module github.com/FrankieHealth/be-base
+module github.com/frankie-seb/sinatra
 
 go 1.15
 
