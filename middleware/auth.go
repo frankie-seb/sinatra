@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	ut "github.com/FrankieHealth/be-base/helpers"
+	ut "github.com/frankie-seb/sinatra/helpers"
 )
 
 // Middleware decodes the token

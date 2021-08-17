@@ -5,7 +5,7 @@ package plugins
 import (
 	"testing"
 
-	utils "github.com/FrankieHealth/be-base/internal/utils"
+	utils "github.com/frankie-seb/sinatra/internal/utils"
 )
 
 func TestShortType(t *testing.T) {

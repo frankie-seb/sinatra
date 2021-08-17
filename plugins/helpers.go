@@ -15,7 +15,7 @@ import (
 	"github.com/99designs/gqlgen/codegen/config"
 	gqlgenTemplates "github.com/99designs/gqlgen/codegen/templates"
 	"github.com/99designs/gqlgen/plugin"
-	"github.com/FrankieHealth/be-base/internal/utils"
+	"github.com/frankie-seb/sinatra/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -27,7 +27,7 @@ var pathRegex *regexp.Regexp //nolint:gochecknoglobals
 func init() { //nolint:gochecknoinits
 	fmt.Println("______               _    _        _    _            _ _   _\n|  ____|             | |  (_)      | |  | |          | | | | |\n| |__ _ __ __ _ _ __ | | ___  ___  | |__| | ___  __ _| | |_| |__\n|  __| '__/ _` | '_ \\| |/ / |/ _ \\ |  __  |/ _ \\/ _` | | __| '_ \\\n| |  | | | (_| | | | |   <| |  __/ | |  | |  __/ (_| | | |_| | | |\n|_|  |_|  \\__,_|_| |_|_|\\_\\_|\\___| |_|  |_|\\___|\\__,_|_|\\__|_| |_|") //nolint:lll
 	fmt.Println("")
-	fmt.Println("  Let's get funky with Frankie Health Care's Generator.")
+	fmt.Println("Maddox - a transparent ORM.")
 	fmt.Println("")
 
 	pathRegex = regexp.MustCompile(`src/(.*)`)
@@ -363,7 +363,6 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 			}); renderError != nil {
 			log.Err(renderError).Msg("error while rendering " + templateName)
 		}
-		// log.Debug().Msg("[convert] rendered " + templateName)
 	}
 
 	return nil
