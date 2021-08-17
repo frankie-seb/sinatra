@@ -65,7 +65,7 @@ func configExists(configFilename string) bool {
 
 func initConfig(configFilename string, pkgName string) error {
 	if configFilename == "" {
-		configFilename = "sinatra.yml"
+		configFilename = "config.yml"
 	}
 
 	if err := os.MkdirAll(filepath.Dir(configFilename), 0755); err != nil {
