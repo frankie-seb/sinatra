@@ -72,7 +72,7 @@ func initConfig(configFilename string, pkgName string) error {
 		return fmt.Errorf("unable to create config dir: " + err.Error())
 	}
 
-	c, err := in.GetTemplateContent(configFilename)
+	c, err := in.GetTemplateContent("config")
 	if err != nil {
 		return fmt.Errorf("could not load template: %v", err)
 	}
