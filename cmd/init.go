@@ -65,14 +65,14 @@ func configExists(configFilename string) bool {
 
 func initConfig(configFilename string, pkgName string) error {
 	if configFilename == "" {
-		configFilename = "config.yml"
+		configFilename = "sinatra.yml"
 	}
 
 	if err := os.MkdirAll(filepath.Dir(configFilename), 0755); err != nil {
 		return fmt.Errorf("unable to create config dir: " + err.Error())
 	}
 
-	c, err := in.GetTemplateContent("config")
+	c, err := in.GetTemplateContent("config.gotpl")
 	if err != nil {
 		return fmt.Errorf("could not load template: %v", err)
 	}
