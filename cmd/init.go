@@ -1,37 +1,44 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
+	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
-	"github.com/FrankieHealth/be-base/config"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/frankie-seb/sinatra/config"
+	in "github.com/frankie-seb/sinatra/internal"
+	"github.com/urfave/cli/v2"
 )
 
 var (
-	pkgName string
-
-	initCmd = &cobra.Command{
-		Use:     "init [name]",
+	initCmd = &cli.Command{
+		Name:    "init",
 		Aliases: []string{"initialize", "initialise", "create"},
-		Short:   "Initialize a Sinatra Project",
-		Long:    "Initialize a Sinatra Project",
-		Run: func(_ *cobra.Command, args []string) {
-			projectPath, err := initializeProject(args)
-			cobra.CheckErr(err)
-			fmt.Printf("Your Sinatra ORM is ready at\n%s\n", projectPath)
+		Usage:   "Initialize a Sinatra Project",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{Name: "verbose, v", Usage: "show logs"},
+			&cli.StringFlag{Name: "config, c", Usage: "the config filename"},
+			&cli.StringFlag{Name: "server", Usage: "where to write the server stub to", Value: "server.go"},
+			&cli.StringFlag{Name: "schema", Usage: "where to write the schema stub to", Value: "graph/schema.graphqls"},
+		},
+		Action: func(ctx *cli.Context) error {
+			err := initializeProject(ctx)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Your Sinatra ORM is ready")
+			return nil
 		},
 	}
 )
 
-func init() {
-	initCmd.Flags().BoolP("verbose", "d", false, "Debug mode prints stack traces on error")
-}
+func initializeProject(ctx *cli.Context) error {
+	configFilename := ctx.String("config")
 
-func initializeProject(args []string) (string, error) {
-	pkgName := code.ImportPathForDir(".")
+	pkgName := in.ImportPathForDir(".")
 	if pkgName == "" {
 		return fmt.Errorf("unable to determine import path for current directory, you probably need to run go mod init first")
 	}
@@ -42,29 +49,7 @@ func initializeProject(args []string) (string, error) {
 		}
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	if len(args) > 0 {
-		if args[0] != "." {
-			wd = fmt.Sprintf("%s/%s", wd, args[0])
-		}
-	}
-
-	project := &Project{
-		AbsolutePath: wd,
-		PkgName:      pkgName,
-		Viper:        viper.GetBool("useViper"),
-		AppName:      path.Base(pkgName),
-	}
-
-	if err := project.Create(); err != nil {
-		return "", err
-	}
-
-	return project.AbsolutePath, nil
+	return nil
 }
 
 func configExists(configFilename string) bool {
@@ -76,4 +61,35 @@ func configExists(configFilename string) bool {
 		cfg, _ = config.LoadConfigFromDefaultLocations()
 	}
 	return cfg != nil
+}
+
+func initConfig(configFilename string, pkgName string) error {
+	if configFilename == "" {
+		configFilename = "sinatra.yml"
+	}
+
+	if err := os.MkdirAll(filepath.Dir(configFilename), 0755); err != nil {
+		return fmt.Errorf("unable to create config dir: " + err.Error())
+	}
+
+	c, err := in.GetTemplateContent(configFilename)
+	if err != nil {
+		return fmt.Errorf("could not load template: %v", err)
+	}
+
+	tpl, err := template.New("").Parse(c)
+	if err != nil {
+		return fmt.Errorf("parse: %v", err)
+	}
+
+	var buf bytes.Buffer
+	if err := tpl.Execute(&buf, pkgName); err != nil {
+		panic(err)
+	}
+
+	if err := ioutil.WriteFile(configFilename, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("unable to write cfg file: " + err.Error())
+	}
+
+	return nil
 }

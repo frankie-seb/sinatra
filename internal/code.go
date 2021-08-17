@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/spf13/pflag"
 )
 
 var modregex = regexp.MustCompile(`module ([^\s]*)`)
@@ -72,4 +74,20 @@ func ImportPathForDir(dir string) (res string) {
 	}
 
 	return ""
+}
+
+func getBoolP(p *pflag.FlagSet, key string) bool {
+	value, err := p.GetBool(key)
+	if err != nil {
+		panic(err)
+	}
+	return value
+}
+
+func getStringP(p *pflag.FlagSet, key string) string {
+	value, err := p.GetString(key)
+	if err != nil {
+		panic(err)
+	}
+	return value
 }

@@ -363,7 +363,6 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 			}); renderError != nil {
 			log.Err(renderError).Msg("error while rendering " + templateName)
 		}
-		// log.Debug().Msg("[convert] rendered " + templateName)
 	}
 
 	return nil

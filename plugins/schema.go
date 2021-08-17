@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/FrankieHealth/be-base/internal/utils"
+	"github.com/frankie-seb/sinatra/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog/log"
 )
