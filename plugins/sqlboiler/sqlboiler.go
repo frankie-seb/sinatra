@@ -61,7 +61,7 @@ func getPsqlDriverConfig(cfg *config.Config) (map[string]interface{}, error) {
 		"dbname":    cfg.Database.DBName,
 		"host":      cfg.Database.Host,
 		"port":      cfg.Database.Port,
-		"user":      cfg.Database.UserName,
+		"user":      cfg.Database.User,
 		"pass":      cfg.Database.Password,
 		"sslmode":   cfg.Database.SSLMode,
 		"blacklist": cfg.Database.Blacklist,

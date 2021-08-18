@@ -51,27 +51,27 @@ type ModelConfig struct {
 }
 
 type DatabaseConfig struct {
-	DBDriver         string   `yaml:"dbDriver"`
-	DBName           string   `yaml:"dbName"`
-	Schema           string   `yaml:"debug,omitempty"`
+	DBDriver         string   `yaml:"dbdriver"`
+	DBName           string   `yaml:"dbname"`
+	Schema           string   `yaml:"schema,omitempty"`
 	Host             string   `yaml:"host,omitempty"`
 	Port             string   `yaml:"port,omitempty"`
-	UserName         string   `yaml:"user,omitempty"`
+	User             string   `yaml:"user,omitempty"`
 	Password         string   `yaml:"pass,omitempty"`
-	SSLMode          string   `yaml:"sslMode,omitempty"`
+	SSLMode          string   `yaml:"sslmode,omitempty"`
 	Blacklist        []string `yaml:"blacklist,omitempty"`
 	Whitelist        []string `yaml:"whitelist,omitempty"`
 	Debug            bool     `yaml:"debug,omitempty"`
-	AddGlobal        bool     `yaml:"addGlobal,omitempty"`
-	AddPanic         bool     `yaml:"addPanic,omitempty"`
-	NoContext        bool     `yaml:"noContext,omitempty"`
-	NoTests          bool     `yaml:"noTests,omitempty"`
-	NoHooks          bool     `yaml:"noHooks,omitempty"`
-	NoRowsAffected   bool     `yaml:"noRowsAffected,omitempty"`
-	NoAutoTimestamps bool     `yaml:"noAutoTimestamps,omitempty"`
+	AddGlobal        bool     `yaml:"addglobal,omitempty"`
+	AddPanic         bool     `yaml:"addpanic,omitempty"`
+	NoContext        bool     `yaml:"nocontext,omitempty"`
+	NoTests          bool     `yaml:"notests,omitempty"`
+	NoHooks          bool     `yaml:"nohooks,omitempty"`
+	NoRowsAffected   bool     `yaml:"norowsaffected,omitempty"`
+	NoAutoTimestamps bool     `yaml:"noautotimestamps,omitempty"`
 	Wipe             bool     `yaml:"wipe,omitempty"`
-	AddSoftDeletes   bool     `yaml:"addSoftDeletes,omitempty"`
-	StructTagCasing  string   `yaml:"noAutoTimestamps,omitempty"`
+	AddSoftDeletes   bool     `yaml:"addsoftdeletes,omitempty"`
+	StructTagCasing  string   `yaml:"noautotimestamps,omitempty"`
 }
 
 type Config struct {
