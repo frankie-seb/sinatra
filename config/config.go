@@ -61,6 +61,7 @@ type DatabaseConfig struct {
 	SSLMode          string   `yaml:"sslmode,omitempty"`
 	Blacklist        []string `yaml:"blacklist,omitempty"`
 	Whitelist        []string `yaml:"whitelist,omitempty"`
+	Debug            bool     `yaml:"debug,omitempty"`
 	AddGlobal        bool     `yaml:"addglobal,omitempty"`
 	AddPanic         bool     `yaml:"addpanic,omitempty"`
 	NoContext        bool     `yaml:"nocontext,omitempty"`
@@ -90,7 +91,7 @@ func DefaultConfig() *Config {
 		Helper:   DirConfig{DirName: "helpers", Package: "helpers"},
 		Graph:    DirConfig{DirName: "graph", Package: "graph"},
 		Schema:   SchemaConfig{DirName: "schema", Package: "schema"},
-		Database: DatabaseConfig{DBDriver: "psql", AddGlobal: true, AddPanic: false, NoContext: false, NoTests: false, NoHooks: false, NoRowsAffected: false, NoAutoTimestamps: false, AddSoftDeletes: true, Wipe: true, StructTagCasing: "camel"},
+		Database: DatabaseConfig{DBDriver: "psql", Debug: false, AddGlobal: true, AddPanic: false, NoContext: false, NoTests: false, NoHooks: false, NoRowsAffected: false, NoAutoTimestamps: false, AddSoftDeletes: true, Wipe: true, StructTagCasing: "camel"},
 	}
 }
 
