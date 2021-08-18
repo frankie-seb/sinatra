@@ -38,7 +38,7 @@ var (
 			}
 
 			// Run db models generation
-			if skipDB := ctx.String("skip-db"); skipDB != "" {
+			if skipDB := ctx.String("skip-db"); skipDB == "" {
 				if err = sqlboiler.Run(cfg); err != nil {
 					return err
 
