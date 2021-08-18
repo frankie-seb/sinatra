@@ -1,13 +1,10 @@
 package sqlboiler
 
 import (
-	"os/exec"
-	"path/filepath"
-
 	"github.com/frankie-seb/sinatra/config"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/v4/boilingcore"
-	"github.com/volatiletech/sqlboiler/v4/drivers"
+	_ "github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql/driver"
 	"github.com/volatiletech/sqlboiler/v4/importers"
 )
 
@@ -17,18 +14,6 @@ var (
 )
 
 func Run(cfg *config.Config) error {
-	// Only support PostgreSQL with SQL Boiler.
-	driverName := "psql"
-	driverPath := "sqlboiler-psql"
-	if p, err := exec.LookPath(driverPath); err == nil {
-		driverPath = p
-	}
-	driverPath, err := filepath.Abs(driverPath)
-	if err != nil {
-		return errors.Wrap(err, "could not find absolute path to driver")
-	}
-	drivers.RegisterBinary(driverName, driverPath)
-
 	// Get the configuration for the driver.
 	driverConfig, err := getPsqlDriverConfig(cfg)
 	if err != nil {
