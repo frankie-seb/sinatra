@@ -71,7 +71,7 @@ type DatabaseConfig struct {
 	NoAutoTimestamps bool     `yaml:"noautotimestamps,omitempty"`
 	Wipe             bool     `yaml:"wipe,omitempty"`
 	AddSoftDeletes   bool     `yaml:"addsoftdeletes,omitempty"`
-	StructTagCasing  string   `yaml:"noautotimestamps,omitempty"`
+	StructTagCasing  string   `yaml:"structtagcasing,omitempty"`
 }
 
 type Config struct {
