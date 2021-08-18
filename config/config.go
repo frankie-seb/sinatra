@@ -57,7 +57,7 @@ type DatabaseConfig struct {
 	Host             string   `yaml:"host,omitempty"`
 	Port             string   `yaml:"port,omitempty"`
 	User             string   `yaml:"user,omitempty"`
-	Password         string   `yaml:"pass,omitempty"`
+	Password         string   `yaml:"password,omitempty"`
 	SSLMode          string   `yaml:"sslmode,omitempty"`
 	Blacklist        []string `yaml:"blacklist,omitempty"`
 	Whitelist        []string `yaml:"whitelist,omitempty"`
