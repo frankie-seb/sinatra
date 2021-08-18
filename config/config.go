@@ -17,18 +17,18 @@ type PackageConfig struct {
 }
 
 type DirConfig struct {
-	DirName string `yaml:"dir"`
+	DirName string `yaml:"dirname"`
 	Package string `yaml:"package,omitempty"`
 }
 
 type ResolverConfig struct {
-	DirName string `yaml:"dir"`
+	DirName string `yaml:"dirname"`
 	Package string `yaml:"package,omitempty"`
 	Type    string `yaml:"type,omitempty"`
 }
 
 type FederationConfig struct {
-	DirName       string           `yaml:"dir"`
+	DirName       string           `yaml:"dirname"`
 	Package       string           `yaml:"package,omitempty"`
 	CurrentSchema string           `yaml:"currentSchema,omitempty"`
 	ForeignIDs    ForeignIDColumns `yaml:"foreignIds,omitempty"`
@@ -40,7 +40,7 @@ type ForeignIDColumns struct {
 }
 
 type SchemaConfig struct {
-	DirName    string   `yaml:"dir"`
+	DirName    string   `yaml:"dirname"`
 	Package    string   `yaml:"package,omitempty"`
 	Directives []string `yaml:"directives,omitempty"`
 }
@@ -50,35 +50,28 @@ type ModelConfig struct {
 	Package string `yaml:"package,omitempty"`
 }
 
-type StrictTagCasingType string
-
-const (
-	Camel StrictTagCasingType = "camel"
-	Sick  StrictTagCasingType = "snake"
-)
-
 type DatabaseConfig struct {
-	DBDriver         string              `yaml:"dbDriver"`
-	DBName           string              `yaml:"dbName"`
-	Schema           string              `yaml:"debug,omitempty"`
-	Host             string              `yaml:"host,omitempty"`
-	Port             string              `yaml:"port,omitempty"`
-	UserName         string              `yaml:"user,omitempty"`
-	Password         string              `yaml:"pass,omitempty"`
-	SSLMode          string              `yaml:"sslMode,omitempty"`
-	Blacklist        []string            `yaml:"blacklist,omitempty"`
-	Whitelist        []string            `yaml:"whitelist,omitempty"`
-	Debug            bool                `yaml:"debug,omitempty"`
-	AddGlobal        bool                `yaml:"addGlobal,omitempty"`
-	AddPanic         bool                `yaml:"addPanic,omitempty"`
-	NoContext        bool                `yaml:"noContext,omitempty"`
-	NoTests          bool                `yaml:"noTests,omitempty"`
-	NoHooks          bool                `yaml:"noHooks,omitempty"`
-	NoRowsAffected   bool                `yaml:"noRowsAffected,omitempty"`
-	NoAutoTimestamps bool                `yaml:"noAutoTimestamps,omitempty"`
-	Wipe             bool                `yaml:"wipe,omitempty"`
-	AddSoftDeletes   bool                `yaml:"addSoftDeletes,omitempty"`
-	StructTagCasing  StrictTagCasingType `yaml:"noAutoTimestamps,omitempty"`
+	DBDriver         string   `yaml:"dbDriver"`
+	DBName           string   `yaml:"dbName"`
+	Schema           string   `yaml:"debug,omitempty"`
+	Host             string   `yaml:"host,omitempty"`
+	Port             string   `yaml:"port,omitempty"`
+	UserName         string   `yaml:"user,omitempty"`
+	Password         string   `yaml:"pass,omitempty"`
+	SSLMode          string   `yaml:"sslMode,omitempty"`
+	Blacklist        []string `yaml:"blacklist,omitempty"`
+	Whitelist        []string `yaml:"whitelist,omitempty"`
+	Debug            bool     `yaml:"debug,omitempty"`
+	AddGlobal        bool     `yaml:"addGlobal,omitempty"`
+	AddPanic         bool     `yaml:"addPanic,omitempty"`
+	NoContext        bool     `yaml:"noContext,omitempty"`
+	NoTests          bool     `yaml:"noTests,omitempty"`
+	NoHooks          bool     `yaml:"noHooks,omitempty"`
+	NoRowsAffected   bool     `yaml:"noRowsAffected,omitempty"`
+	NoAutoTimestamps bool     `yaml:"noAutoTimestamps,omitempty"`
+	Wipe             bool     `yaml:"wipe,omitempty"`
+	AddSoftDeletes   bool     `yaml:"addSoftDeletes,omitempty"`
+	StructTagCasing  string   `yaml:"noAutoTimestamps,omitempty"`
 }
 
 type Config struct {
@@ -98,7 +91,7 @@ func DefaultConfig() *Config {
 		Helper:   DirConfig{DirName: "helpers", Package: "helpers"},
 		Graph:    DirConfig{DirName: "graph", Package: "graph"},
 		Schema:   SchemaConfig{DirName: "schema", Package: "schema"},
-		Database: DatabaseConfig{DBDriver: "psql", Debug: false, AddGlobal: true, AddPanic: false, NoContext: false, NoTests: false, NoHooks: false, NoRowsAffected: false, NoAutoTimestamps: false, AddSoftDeletes: true, Wipe: true, StructTagCasing: Camel},
+		Database: DatabaseConfig{DBDriver: "psql", Debug: false, AddGlobal: true, AddPanic: false, NoContext: false, NoTests: false, NoHooks: false, NoRowsAffected: false, NoAutoTimestamps: false, AddSoftDeletes: true, Wipe: true, StructTagCasing: "camel"},
 	}
 }
 

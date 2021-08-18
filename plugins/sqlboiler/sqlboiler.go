@@ -4,8 +4,8 @@ import (
 	"github.com/frankie-seb/sinatra/config"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
-	"github.com/volatiletech/sqlboiler/boilingcore"
-	"github.com/volatiletech/sqlboiler/importers"
+	"github.com/volatiletech/sqlboiler/v4/boilingcore"
+	"github.com/volatiletech/sqlboiler/v4/importers"
 )
 
 var (
