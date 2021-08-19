@@ -140,9 +140,9 @@ func LoadGqlgenConfig(cfg *Config) *gqlcon.Config {
 	var gql *gqlcon.Config
 
 	fmt.Printf("***** %+v", cfg)
-	fmt.Println("*****", cfg.Schema.DirName)
+	fmt.Println("***** \n", gqlcon.StringList{cfg.Schema.DirName})
 
-	gql.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName}
+	// gql.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName}
 	gql.Exec.Filename = cfg.Graph.DirName
 	gql.Exec.Package = cfg.Graph.Package
 	gql.Model.Filename = cfg.Model.DirName
