@@ -58,13 +58,11 @@ func isNotNullOr(column string, v string) qm.QueryMod {
 }
 
 func appendSubQuery(queryMods []qm.QueryMod, q *queries.Query) []qm.QueryMod {
-	{{- if $.PluginConfig.PostgresSubModelFiltering }}
-		member := reflect.ValueOf(q).Elem().FieldByName("dialect")
-		dialectPtr := (**drivers.Dialect)(unsafe.Pointer(member.UnsafeAddr()))
-		dialect := **dialectPtr
-		dialect.UseIndexPlaceholders = false
-		*dialectPtr = &dialect
-	{{- end }}
+	member := reflect.ValueOf(q).Elem().FieldByName("dialect")
+	dialectPtr := (**drivers.Dialect)(unsafe.Pointer(member.UnsafeAddr()))
+	dialect := **dialectPtr
+	dialect.UseIndexPlaceholders = false
+	*dialectPtr = &dialect
 
 	qs, args := queries.BuildQuery(q)
 	qsClean := strings.TrimSuffix(qs, ";")
@@ -72,20 +70,18 @@ func appendSubQuery(queryMods []qm.QueryMod, q *queries.Query) []qm.QueryMod {
 }
 
 func appendJoinSubQuery(queryMods []qm.QueryMod, q *queries.Query, to string, via string, toCol string) []qm.QueryMod {
-	{{- if $.PluginConfig.PostgresSubModelFiltering }}
-		member := reflect.ValueOf(q).Elem().FieldByName("dialect")
-		dialectPtr := (**drivers.Dialect)(unsafe.Pointer(member.UnsafeAddr()))
-		dialect := **dialectPtr
-		dialect.UseIndexPlaceholders = false
-		*dialectPtr = &dialect
-	{{- end }}
+	member := reflect.ValueOf(q).Elem().FieldByName("dialect")
+	dialectPtr := (**drivers.Dialect)(unsafe.Pointer(member.UnsafeAddr()))
+	dialect := **dialectPtr
+	dialect.UseIndexPlaceholders = false
+	*dialectPtr = &dialect
 
 	qs, args := queries.BuildQuery(q)
 	qsClean := strings.TrimSuffix(qs, ";")
-	return append(queryMods, qm.Where(fmt.Sprintf("EXISTS(SELECT 1 FROM {{ if $.PluginConfig.Schema }}\"{{ $.PluginConfig.Schema }}\".{{- end }}\"%v\" WHERE (EXISTS(%v AND (%v.%v = %v.id)))", via, qsClean, via, toCol, to), args...))
+	return append(queryMods, qm.Where(fmt.Sprintf("EXISTS(SELECT 1 FROM {{ if $.Federation.Schema }}\"{{ $.Federation.Schema }}\".{{- end }}\"%v\" WHERE (EXISTS(%v AND (%v.%v = %v.id)))", via, qsClean, via, toCol, to), args...))
 }
 
-func BooleanFilterToMods(m *{{ $.GqlModels.PackageName }}.BooleanFilter, column string) []qm.QueryMod {
+func BooleanFilterToMods(m *{{ $.GraphModels.PackageName }}.BooleanFilter, column string) []qm.QueryMod {
 	if m == nil {
 		return nil
 	}
@@ -105,7 +101,7 @@ func BooleanFilterToMods(m *{{ $.GqlModels.PackageName }}.BooleanFilter, column 
 	return queryMods
 }
 
-func IDFilterToMods(m *{{ $.GqlModels.PackageName }}.IDFilter, column string) []qm.QueryMod {
+func IDFilterToMods(m *{{ $.GraphModels.PackageName }}.IDFilter, column string) []qm.QueryMod {
 	if m == nil {
 		return nil
 	}
@@ -133,7 +129,7 @@ func IDFilterToMods(m *{{ $.GqlModels.PackageName }}.IDFilter, column string) []
 
 
 
-func StringFilterToMods(m *{{ $.GqlModels.PackageName }}.StringFilter, column string) []qm.QueryMod {
+func StringFilterToMods(m *{{ $.GraphModels.PackageName }}.StringFilter, column string) []qm.QueryMod {
 	if m == nil {
 		return nil
 	}
@@ -226,7 +222,7 @@ func StringFilterToMods(m *{{ $.GqlModels.PackageName }}.StringFilter, column st
 }
 
 
-func FloatFilterToMods(m *{{ $.GqlModels.PackageName }}.FloatFilter, column string) []qm.QueryMod {
+func FloatFilterToMods(m *{{ $.GraphModels.PackageName }}.FloatFilter, column string) []qm.QueryMod {
 	if m == nil {
 		return nil
 	}
@@ -270,7 +266,7 @@ func FloatFilterToMods(m *{{ $.GqlModels.PackageName }}.FloatFilter, column stri
 	return queryMods
 }
 
-func IntFilterToMods(m *{{ $.GqlModels.PackageName }}.IntFilter, column string) []qm.QueryMod {
+func IntFilterToMods(m *{{ $.GraphModels.PackageName }}.IntFilter, column string) []qm.QueryMod {
 	if m == nil {
 		return nil
 	}
@@ -314,7 +310,7 @@ func IntFilterToMods(m *{{ $.GqlModels.PackageName }}.IntFilter, column string) 
 	return queryMods
 }
 
-func TimeFilterToMods(m *{{ $.GqlModels.PackageName }}.TimeFilter, column string) []qm.QueryMod {
+func TimeFilterToMods(m *{{ $.GraphModels.PackageName }}.TimeFilter, column string) []qm.QueryMod {
 	if m == nil {
 		return nil
 	}

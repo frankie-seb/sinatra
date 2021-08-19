@@ -39,17 +39,17 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 {{ range $enum := .Enums }}
 
 	{{- if $enum.HasBoilerEnum }}
-	var {{$enum.Name}}DBValue = map[{{ $.GqlModels.PackageName }}.{{ .Name }}]string{
+	var {{$enum.Name}}DBValue = map[{{ $.GraphModels.PackageName }}.{{ .Name }}]string{
 		{{- range $value := .Values }}
 			{{- if .BoilerEnumValue }}
-				{{ $.GqlModels.PackageName }}.{{$enum.Name|go}}{{ .Name|go }}: {{ $.BoilerModels.PackageName }}.{{ .BoilerEnumValue.Name }},
+				{{ $.GraphModels.PackageName }}.{{$enum.Name|go}}{{ .Name|go }}: {{ $.DbModels.PackageName }}.{{ .BoilerEnumValue.Name }},
 			{{- end }}
 		{{- end }}
 	}
-	var {{$enum.Name}}APIValue = map[string]{{ $.GqlModels.PackageName }}.{{ .Name }}{
+	var {{$enum.Name}}APIValue = map[string]{{ $.GraphModels.PackageName }}.{{ .Name }}{
 		{{- range $value := .Values }}
 			{{- if .BoilerEnumValue }}
-				{{ $.BoilerModels.PackageName }}.{{ .BoilerEnumValue.Name }}: {{ $.GqlModels.PackageName }}.{{$enum.Name|go}}{{ .Name|go }},
+				{{ $.DbModels.PackageName }}.{{ .BoilerEnumValue.Name }}: {{ $.GraphModels.PackageName }}.{{$enum.Name|go}}{{ .Name|go }},
 			{{- end }}
 		{{- end }}
 	}
@@ -61,15 +61,15 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 			{{- end }}
 		)
 
-		var {{$enum.Name}}DBValue = map[{{ $.GqlModels.PackageName }}.{{ .Name }}]{{$enum.Name}}{
+		var {{$enum.Name}}DBValue = map[{{ $.GraphModels.PackageName }}.{{ .Name }}]{{$enum.Name}}{
 			{{- range $value := .Values }}
-				{{ $.GqlModels.PackageName }}.{{$enum.Name|go}}{{ .Name|go }}: {{$enum.Name|go}}{{ .Name|go }},
+				{{ $.GraphModels.PackageName }}.{{$enum.Name|go}}{{ .Name|go }}: {{$enum.Name|go}}{{ .Name|go }},
 			{{- end }}
 		}
 
-		var {{$enum.Name}}APIValue = map[{{$enum.Name}}]{{ $.GqlModels.PackageName }}.{{ .Name }}{
+		var {{$enum.Name}}APIValue = map[{{$enum.Name}}]{{ $.GraphModels.PackageName }}.{{ .Name }}{
 			{{- range $value := .Values }}
-				{{$enum.Name|go}}{{ .Name|go }}: {{ $.GqlModels.PackageName }}.{{$enum.Name|go}}{{ .Name|go }},
+				{{$enum.Name|go}}{{ .Name|go }}: {{ $.GraphModels.PackageName }}.{{$enum.Name|go}}{{ .Name|go }},
 			{{- end }}
 		}
 	{{- end }}
@@ -78,13 +78,13 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 {{ range $model := .Models }}
 	{{- if .IsInput -}}
 		func {{ .Name }}ToBoiler(
-				m *{{ $.GqlModels.PackageName }}.{{ .Name }},
-			)( *{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }}) {
+				m *{{ $.GraphModels.PackageName }}.{{ .Name }},
+			)( *{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }}) {
 			if m == nil {
 				return nil
 			}
 
-			r := &{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }}{
+			r := &{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }}{
 			{{ range $field := .Fields -}}
 				{{- if $field.ConvertConfig.IsCustom -}}
 					{{- if $field.IsPrimaryID -}}
@@ -110,15 +110,15 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 
 		func {{ .Name }}ToModelM(
 			input map[string]interface{},
-			m {{ $.GqlModels.PackageName }}.{{ .Name }},
-		) {{ $.BoilerModels.PackageName }}.M {
+			m {{ $.GraphModels.PackageName }}.{{ .Name }},
+		) {{ $.DbModels.PackageName }}.M {
 			model := {{ .Name }}ToBoiler(&m)
-			modelM := {{ $.BoilerModels.PackageName }}.M{}
+			modelM := {{ $.DbModels.PackageName }}.M{}
 			for key := range input {
 				switch key {
 					{{ range $field := .Fields -}}
 					case "{{ $field.JSONName }}":
-						modelM[{{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{- $field.BoilerField.Name }}] = model.{{ $field.Name }}
+						modelM[{{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{- $field.BoilerField.Name }}] = model.{{ $field.Name }}
 					{{ end -}}
 				}
 			}
@@ -131,7 +131,7 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 				switch key {
 					{{ range $field := .Fields -}}
 						case "{{ $field.JSONName }}":
-							columnsWhichAreSet = append(columnsWhichAreSet, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{- $field.BoilerField.Name }})
+							columnsWhichAreSet = append(columnsWhichAreSet, {{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{- $field.BoilerField.Name }})
 					{{ end -}}
 				}
 			}
@@ -140,12 +140,12 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 		}
 	{{ end }}
 	{{- if .IsNormal  -}}
-		func {{ .Name }}ToGraphQL(m *{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }})( *{{ $.GqlModels.PackageName }}.{{ .Name }}) {
+		func {{ .Name }}ToGraphQL(m *{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }})( *{{ $.GraphModels.PackageName }}.{{ .Name }}) {
 			if m == nil {
 				return nil
 			}
 
-			r := &{{ $.GqlModels.PackageName }}.{{ .Name }}{
+			r := &{{ $.GraphModels.PackageName }}.{{ .Name }}{
 				{{ range $field := .Fields -}}
 					{{- if $field.ConvertConfig.IsCustom -}}
 						{{- if $field.IsPrimaryID -}}
@@ -196,7 +196,7 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 		}
 	{{ end }}
 	{{- if .IsWhere  -}}	
-		func {{ .Name }}ToMods(m *{{ $.GqlModels.PackageName }}.{{ .Name }}, withPrimaryID bool, parentTable string) []qm.QueryMod {
+		func {{ .Name }}ToMods(m *{{ $.GraphModels.PackageName }}.{{ .Name }}, withPrimaryID bool, parentTable string) []qm.QueryMod {
 			if m == nil {
 				return nil
 			}
@@ -207,11 +207,11 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 				{{- if not $field.IsJSON -}}
 					{{-  if and $field.IsRelation $field.BoilerField.IsRelation }}
 						{{- if $field.IsPlural }}
-							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, "", {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
+							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, "", {{ $.DbModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
 						{{- else if $field.BoilerField.IsForeignKey }}
-							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }}, {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
+							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, {{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }}, {{ $.DbModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
 						{{- else }}
-							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, "", {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
+							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}SubqueryToMods(m.{{ $field.Name }}, "", {{ $.DbModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }})...)
 						{{- end }}
 					{{-  else if $field.IsOr  }}
 						if m.Or != nil {
@@ -224,10 +224,10 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 					{{- else }}
 						{{- if $field.IsPrimaryID }}
 						if withPrimaryID {
-							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}ToMods(m.{{ $field.Name }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }})...)
+							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}ToMods(m.{{ $field.Name }}, {{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }})...)
 						}
 						{{- else }}
-							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}ToMods(m.{{ $field.Name }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }})...)					
+							queryMods = append(queryMods, {{ $field.TypeWithoutPointer|go }}ToMods(m.{{ $field.Name }}, {{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }})...)					
 						{{- end }}
 					{{- end -}}
 				{{ end }}
@@ -238,13 +238,13 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 					{{- if not $field.IsPlural -}}
 						{{-  if and $field.IsRelation $field.BoilerField.IsRelation  -}}
 							{{- if $field.BoilerField.IsForeignKey }}
-								if parentTable == {{ $.BoilerModels.PackageName }}.TableNames.{{ $field.Relationship.BoilerModel.TableName }} {
-									queryMods = append(queryMods, qm.Where(fmt.Sprintf("%v.%v = %v.id", {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }}, parentTable)))
+								if parentTable == {{ $.DbModels.PackageName }}.TableNames.{{ $field.Relationship.BoilerModel.TableName }} {
+									queryMods = append(queryMods, qm.Where(fmt.Sprintf("%v.%v = %v.id", {{ $.DbModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }}, {{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }}, parentTable)))
 								}
 							{{- else }}
 								// TODO: if the relations filtering does not work, please make an issue
-								// if parentTable == {{ $.BoilerModels.PackageName }}.TableNames.{{ $field.Relationship.BoilerModel.TableName }} {
-									// queryMods = append(queryMods, qm.Where(fmt.Sprintf("%v.%v = %v.id", {{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }}, {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }}, parentTable)))
+								// if parentTable == {{ $.DbModels.PackageName }}.TableNames.{{ $field.Relationship.BoilerModel.TableName }} {
+									// queryMods = append(queryMods, qm.Where(fmt.Sprintf("%v.%v = %v.id", {{ $.DbModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }}, {{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $field.BoilerField.Name }}, parentTable)))
 								// }
 							{{- end -}}
 						{{- end -}}
@@ -261,23 +261,23 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 
 		{{- range $field := .Fields -}}
 			{{- if eq $field.Name "Sort" -}}
-				var {{ $field.Enum.Name }}Column = map[{{ $.GqlModels.PackageName }}.{{$field.Enum.Name}}]string{
+				var {{ $field.Enum.Name }}Column = map[{{ $.GraphModels.PackageName }}.{{$field.Enum.Name}}]string{
 					{{- range $value := $field.Enum.Values}}
 						{{- if eq $value.Name "RANDOM" -}}
 						{{- else }}
-							{{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }}: {{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $value.NameLower|go }},
+							{{ $.GraphModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }}: {{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{ $value.NameLower|go }},
 						{{- end -}}
 					{{- end }}
 				}
 
 				func {{ $model.BoilerModel.Name }}SortValueFromCursorValue(cursorValue string) (string, interface{}) {
 					key, value := base_helpers.FromCursorValue(cursorValue)
-					column := {{ $model.BoilerModel.Name }}SortColumn[{{ $.GqlModels.PackageName }}.{{ $model.BoilerModel.Name }}Sort(key)]
+					column := {{ $model.BoilerModel.Name }}SortColumn[{{ $.GraphModels.PackageName }}.{{ $model.BoilerModel.Name }}Sort(key)]
 
 
 					{{ range $value := $field.Enum.Values}}
 						{{- if eq $value.Name "ID" -}}
-						if {{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}(key) == {{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }} {
+						if {{ $.GraphModels.PackageName }}.{{ $field.Enum.Name|go }}(key) == {{ $.GraphModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }} {
 							return column, base_helpers.GetIDFromCursor(value)
 						}
 						{{- end -}}
@@ -286,12 +286,12 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 					return column, base_helpers.StringToInterface(value)
 				}
 
-				func {{ $model.BoilerModel.Name }}SortCursorValue(sort {{ $.GqlModels.PackageName }}.{{ $model.BoilerModel.Name }}Sort, m *{{ $.GqlModels.PackageName }}.{{ $model.BoilerModel.Name }}) interface{} {
+				func {{ $model.BoilerModel.Name }}SortCursorValue(sort {{ $.GraphModels.PackageName }}.{{ $model.BoilerModel.Name }}Sort, m *{{ $.GraphModels.PackageName }}.{{ $model.BoilerModel.Name }}) interface{} {
 					switch sort {
 					{{- range $value := $field.Enum.Values }}
 						{{- if eq $value.Name "RANDOM" -}}
 						{{- else }}
-						case {{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }}:
+						case {{ $.GraphModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }}:
 						return m.{{ .NameLower|go }}
 						{{- end -}}
 					{{- end }}
@@ -304,13 +304,13 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 	{{ if .IsCreateInput  }}
 		var {{ lcFirst .BoilerModel.PluralName }}BatchCreateColumns = []string{
 			{{ range $field := .Fields -}}
-				{{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{- $field.BoilerField.Name }},
+				{{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.{{- $field.BoilerField.Name }},
 			{{ end }}
 		}
 
 		var {{ lcFirst .BoilerModel.PluralName }}BatchCreateColumnsMarks = base_helpers.GetQuestionMarksForColumns({{ lcFirst .BoilerModel.PluralName }}BatchCreateColumns)
 
-		func {{ lcFirst .BoilerModel.Name }}ToBatchCreateValues(e *{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }}) []interface{} {
+		func {{ lcFirst .BoilerModel.Name }}ToBatchCreateValues(e *{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }}) []interface{} {
 			return []interface{}{
 				{{ range $field := .Fields -}}
 					e.{{- $field.BoilerField.Name }},
@@ -318,7 +318,7 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 			}
 		}
 
-		func {{ lcFirst .BoilerModel.PluralName }}ToBatchCreate(a []*{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }}) ([]string, []interface{}) {
+		func {{ lcFirst .BoilerModel.PluralName }}ToBatchCreate(a []*{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }}) ([]string, []interface{}) {
 			queryMarks := make([]string, len(a))
 			// nolint:prealloc
 			// yes?
@@ -330,11 +330,11 @@ const batchInsertStatement = "INSERT INTO %s (%s) VALUES %s"
 			return queryMarks, values
 		}
 
-		func {{ .BoilerModel.PluralName }}ToBatchCreateQuery(a []*{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }}) (string, []interface{}) {
+		func {{ .BoilerModel.PluralName }}ToBatchCreateQuery(a []*{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }}) (string, []interface{}) {
 			queryMarks, values := {{ lcFirst .BoilerModel.PluralName }}ToBatchCreate(a)
 			// nolint: gosec -> remove warning because no user input without questions marks
 			return fmt.Sprintf(batchInsertStatement,
-				{{ $.BoilerModels.PackageName }}.TableNames.{{ .BoilerModel.Name }},
+				{{ $.DbModels.PackageName }}.TableNames.{{ .BoilerModel.Name }},
 				strings.Join({{ lcFirst .BoilerModel.PluralName }}BatchCreateColumns, ", "),
 				strings.Join(queryMarks, ", "),
 			), values

@@ -92,7 +92,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 	})
 
 	// Get model resolver template
-	templateName := "resolver_sep.gotpl"
+	templateName := "resolver.gotpl"
 	templateContent, err := internal.GetTemplateContent(templateName)
 	if err != nil {
 		log.Err(err).Msg("error when reading " + templateName)
