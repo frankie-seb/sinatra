@@ -177,7 +177,7 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 
 	if cfg.Federation.DirName != "" {
 		config.AutoBind = gqlcon.StringList{cfg.Federation.DirName}
-		config.Federation.Filename = cfg.Federation.DirName
+		config.Federation.Filename = cfg.Federation.DirName + "/federation.go"
 		config.Federation.Package = cfg.Federation.Package
 	}
 
