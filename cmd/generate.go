@@ -1,9 +1,15 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/99designs/gqlgen/api"
+	gqlcon "github.com/99designs/gqlgen/codegen/config"
 	"github.com/frankie-seb/sinatra/config"
+	"github.com/frankie-seb/sinatra/plugins/helpers"
+	"github.com/frankie-seb/sinatra/plugins/resolvers"
+	"github.com/frankie-seb/sinatra/plugins/schema"
 	"github.com/frankie-seb/sinatra/plugins/sqlboiler"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
@@ -20,6 +26,7 @@ var (
 		},
 		Action: func(ctx *cli.Context) error {
 			var cfg *config.Config
+			var gqlcfg *gqlcon.Config
 			var err error
 			if configFilename := ctx.String("config"); configFilename != "" {
 				cfg, err = config.LoadConfig(configFilename)
@@ -44,11 +51,31 @@ var (
 
 				}
 			}
-			// Run generator
 
-			// if err = api.Generate(cfg); err != nil {
-			// 	return err
-			// }
+			// Generate the schema
+			h := &schema.HooksConfig{}
+			if err := schema.SchemaWrite(cfg, h); err != nil {
+				fmt.Println("error while trying to generate schema.graphql")
+				fmt.Fprintln(os.Stderr, err.Error())
+				os.Exit(3)
+			}
+
+			// Generate the gqlgen config
+			gqlcfg = config.LoadGqlgenConfig(cfg)
+			// Run generator
+			if err = api.Generate(gqlcfg,
+				api.AddPlugin(helpers.NewHelperPlugin(
+					cfg,
+				)),
+				api.AddPlugin(resolvers.NewResolverPlugin(
+					cfg,
+				)),
+			); err != nil {
+				fmt.Println("error while trying run sinatra")
+				fmt.Fprintln(os.Stderr, err.Error())
+				os.Exit(3)
+			}
+
 			return nil
 		},
 	}

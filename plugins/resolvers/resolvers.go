@@ -1,4 +1,4 @@
-package plugins
+package resolvers
 
 import (
 	"fmt"
@@ -9,8 +9,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/frankie-seb/sinatra/internal"
 	"github.com/frankie-seb/sinatra/internal/utils"
 
+	con "github.com/frankie-seb/sinatra/config"
 	"github.com/rs/zerolog/log"
 
 	"github.com/iancoleman/strcase"
@@ -19,12 +21,9 @@ import (
 	"github.com/99designs/gqlgen/plugin"
 )
 
-func NewResolverPlugin(helpers, boilerModels, gqlModels Config, resolverPluginConfig ResolverPluginConfig) plugin.Plugin {
+func NewResolverPlugin(cfg *con.Config) plugin.Plugin {
 	return &ResolverPlugin{
-		helpers:        helpers,
-		boilerModels:   boilerModels,
-		gqlModels:      gqlModels,
-		pluginConfig:   resolverPluginConfig,
+		cfg:            cfg,
 		rootImportPath: utils.GetRootImportPath(),
 	}
 }
@@ -37,49 +36,36 @@ type AuthorizationScope struct {
 	AddHook           func(model *utils.BoilerModel, resolver *Resolver, templateKey string) bool
 }
 
-type ResolverPluginConfig struct {
-	AuthorizationScopes []*AuthorizationScope
-	SoftDelete          bool
-}
-
 type ResolverPlugin struct {
-	helpers        Config
-	boilerModels   Config
-	gqlModels      Config
-	pluginConfig   ResolverPluginConfig
+	cfg            *con.Config
 	rootImportPath string
 }
 
 var _ plugin.CodeGenerator = &ResolverPlugin{}
 
 func (m *ResolverPlugin) Name() string {
-	return "resolver-frankie-health"
+	return "sinatra-resolver"
 }
 
 func (m *ResolverPlugin) GenerateCode(data *codegen.Data) error {
 	if !data.Config.Resolver.IsDefined() {
 		return nil
 	}
-
-	// Get all models information
-	// log.Debug().Msg("[resolver] get boiler models")
-	boilerModels, _ := utils.GetBoilerModels(m.boilerModels.Directory)
-	// log.Debug().Msg("[resolver] get models with information")
-	models := GetModelsWithInformation(m.boilerModels, nil, data.Config, boilerModels, nil, nil)
-	// log.Debug().Msg("[resolver] generate file")
+	boilerModels, _ := utils.GetBoilerModels(m.cfg.Model.DirName)
+	models := internal.GetModelsWithInformation(m.cfg.Model.Package, nil, data.Config, boilerModels, nil, nil)
 	return m.generatePerSchema(data, models, boilerModels)
 }
 
-func groupByBoilerModelName(list []*Model) [][]*Model {
+func groupByBoilerModelName(list []*internal.Model) [][]*internal.Model {
 	sort.Slice(list, func(i, j int) bool { return list[i].Name < list[j].Name })
-	r := make([][]*Model, 0)
+	r := make([][]*internal.Model, 0)
 	i := 0
 	var j int
 	for {
 		if i >= len(list) {
 			break
 		}
-		for j = i + 1; j < len(list) && getFirstWord(list[i].Name) == getFirstWord(list[j].Name); j++ {
+		for j = i + 1; j < len(list) && internal.GetFirstWord(list[i].Name) == internal.GetFirstWord(list[j].Name); j++ {
 		}
 
 		r = append(r, list[i:j])
@@ -88,34 +74,27 @@ func groupByBoilerModelName(list []*Model) [][]*Model {
 	return r
 }
 
-func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, _ []*utils.BoilerModel) error {
+func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*internal.Model, _ []*utils.BoilerModel) error {
 	file := File{}
 
-	file.Imports = append(file.Imports, Import{
+	file.Imports = append(file.Imports, internal.Import{
 		Alias:      "dm",
-		ImportPath: path.Join(m.rootImportPath, m.boilerModels.Directory),
+		ImportPath: path.Join(m.rootImportPath, m.cfg.Model.DirName),
 	})
 
-	file.Imports = append(file.Imports, Import{
+	file.Imports = append(file.Imports, internal.Import{
 		Alias:      "fm",
-		ImportPath: path.Join(m.rootImportPath, m.gqlModels.Directory),
+		ImportPath: path.Join(m.rootImportPath, m.cfg.Graph.DirName),
 	})
 
-	file.Imports = append(file.Imports, Import{
+	file.Imports = append(file.Imports, internal.Import{
 		Alias:      "gm",
 		ImportPath: buildImportPath(m.rootImportPath, data.Config.Exec.ImportPath()),
 	})
 
-	for _, scope := range m.pluginConfig.AuthorizationScopes {
-		file.Imports = append(file.Imports, Import{
-			Alias:      scope.ImportAlias,
-			ImportPath: scope.ImportPath,
-		})
-	}
-
 	// Get model resolver template
 	templateName := "resolver_sep.gotpl"
-	templateContent, err := getTemplateContent(templateName)
+	templateContent, err := internal.GetTemplateContent(templateName)
 	if err != nil {
 		log.Err(err).Msg("error when reading " + templateName)
 		return err
@@ -123,7 +102,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 
 	// Get common resolver template
 	commonTemplateName := "common_resolver.gotpl"
-	commonTemplateContent, err := getTemplateContent(commonTemplateName)
+	commonTemplateContent, err := internal.GetTemplateContent(commonTemplateName)
 	if err != nil {
 		log.Err(err).Msg("error when reading " + templateName)
 		return err
@@ -142,7 +121,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 	extendedFiles := []string{"directives.go", "resolver.go", "auth.go"}
 
 	for _, v := range rMod {
-		extendedFiles = append(extendedFiles, strings.ToLower(getFirstWord(v[0].Name))+"_gen.go")
+		extendedFiles = append(extendedFiles, strings.ToLower(internal.GetFirstWord(v[0].Name))+"_gen.go")
 	}
 
 	extendedFunctions, err := utils.GetResolverFunctionNamesFromDir("resolvers", extendedFiles)
@@ -151,14 +130,13 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 	}
 
 	resolverBuild := &ResolverBuild{
-		File:                &file,
-		PackageName:         data.Config.Resolver.Package,
-		ResolverType:        data.Config.Resolver.Type,
-		HasRoot:             true,
-		IsFederatedServer:   data.Config.Federation.IsDefined(),
-		Models:              models,
-		AuthorizationScopes: m.pluginConfig.AuthorizationScopes,
-		SoftDelete:          m.pluginConfig.SoftDelete,
+		File:              &file,
+		PackageName:       data.Config.Resolver.Package,
+		ResolverType:      data.Config.Resolver.Type,
+		HasRoot:           true,
+		IsFederatedServer: data.Config.Federation.IsDefined(),
+		Models:            models,
+		SoftDelete:        m.cfg.Database.AddSoftDeletes,
 	}
 
 	// Write Common Resolver
@@ -170,9 +148,9 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 	})
 
 	// Add in helper import
-	file.Imports = append(file.Imports, Import{
+	file.Imports = append(file.Imports, internal.Import{
 		Alias:      ".",
-		ImportPath: path.Join(m.rootImportPath, m.helpers.Directory),
+		ImportPath: path.Join(m.rootImportPath, m.cfg.Helper.DirName),
 	})
 
 	// Model Resolver
@@ -199,7 +177,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 					n = strings.Replace(n, s, r, -1)
 				}
 
-				if strings.EqualFold(getFirstWord(v[0].Name), getFirstWord(n)) || strings.EqualFold(utils.Plural(getFirstWord(v[0].Name)), getFirstWord(n)) {
+				if strings.EqualFold(internal.GetFirstWord(v[0].Name), internal.GetFirstWord(n)) || strings.EqualFold(utils.Plural(internal.GetFirstWord(v[0].Name)), internal.GetFirstWord(n)) {
 					resolver := &Resolver{
 						Object:         o,
 						Field:          f,
@@ -216,7 +194,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*Model, 
 
 		resolverBuild.Models = v
 
-		utils.WriteTemplateFile(dir+"/resolvers/"+strings.ToLower(getFirstWord(v[0].Name))+"_gen.go", utils.Options{
+		utils.WriteTemplateFile(dir+"/resolvers/"+strings.ToLower(internal.GetFirstWord(v[0].Name))+"_gen.go", utils.Options{
 			Template:             templateContent,
 			PackageName:          data.Config.Resolver.Package,
 			Data:                 resolverBuild,
@@ -246,7 +224,7 @@ type ResolverBuild struct {
 	PackageName         string
 	ResolverType        string
 	IsFederatedServer   bool
-	Models              []*Model
+	Models              []*internal.Model
 	AuthorizationScopes []*AuthorizationScope
 	SoftDelete          bool
 	TryHook             func(string) bool
@@ -257,7 +235,7 @@ type File struct {
 	// resolver method implementations, for example when extending a type in a different graphql schema file
 	Objects         []*codegen.Object
 	Resolvers       []*Resolver
-	Imports         []Import
+	Imports         []internal.Import
 	RemainingSource string
 }
 
@@ -280,8 +258,8 @@ type Resolver struct {
 	ResolveOrganizationID     bool // TODO: something more pluggable
 	ResolveUserOrganizationID bool // TODO: something more pluggable
 	ResolveUserID             bool // TODO: something more pluggable
-	Model                     Model
-	InputModel                Model
+	Model                     internal.Model
+	InputModel                internal.Model
 	BoilerWhiteList           string
 	PublicErrorKey            string
 	PublicErrorMessage        string
@@ -319,7 +297,7 @@ func (rb *ResolverBuild) ShortResolverDeclaration(r *Resolver) string {
 	return res
 }
 
-func enhanceResolver(r *Resolver, models []*Model) { //nolint:gocyclo
+func enhanceResolver(r *Resolver, models []*internal.Model) { //nolint:gocyclo
 	nameOfResolver := r.Field.GoFieldName
 
 	// get model names + model convert information
@@ -399,16 +377,16 @@ func enhanceResolver(r *Resolver, models []*Model) { //nolint:gocyclo
 	r.PublicErrorKey += "Error"
 }
 
-func findModelOrEmpty(models []*Model, modelName string) Model {
+func findModelOrEmpty(models []*internal.Model, modelName string) internal.Model {
 	if modelName == "" {
-		return Model{}
+		return internal.Model{}
 	}
 	for _, m := range models {
 		if m.Name == modelName {
 			return *m
 		}
 	}
-	return Model{}
+	return internal.Model{}
 }
 
 var InputTypes = []string{"Create", "Update", "Delete"} //nolint:gochecknoglobals
