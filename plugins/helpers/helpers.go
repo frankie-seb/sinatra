@@ -178,7 +178,7 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 
 	for _, fileName := range filesToGenerate {
 		templateName := fileName + "tpl"
-		// log.Debug().Msg("[convert] render " + templateName)
+		log.Debug().Msg("[convert] render " + templateName)
 
 		templateContent, err := internal.GetTemplateContent(templateName)
 		if err != nil {
