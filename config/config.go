@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -242,6 +243,8 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 
 		config.Sources = append(config.Sources, &ast.Source{Name: filename, Input: string(schemaRaw)})
 	}
+
+	fmt.Printf("***** %+v \n", config)
 
 	return config, nil
 }
