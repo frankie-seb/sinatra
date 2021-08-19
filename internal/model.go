@@ -359,10 +359,12 @@ func getAstFieldType(binder *config.Binder, schema *ast.Schema, cfg *config.Conf
 	fieldDef := schema.Types[field.Type.Name()]
 	if cfg.Models.UserDefined(field.Type.Name()) {
 		typ, err = binder.FindTypeFromName(cfg.Models[field.Type.Name()].Model[0])
+		fmt.Println("DEFINED FIELD:", field.Name)
 		if err != nil {
 			return typ, err
 		}
 	} else {
+		fmt.Println("UNDEFINED FIELD:", field.Name, fieldDef.Kind)
 		switch fieldDef.Kind {
 		case ast.Scalar:
 			// no user defined model, referencing a default scalar
