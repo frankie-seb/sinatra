@@ -32,10 +32,8 @@ type ResolverConfig struct {
 }
 
 type FederationConfig struct {
-	DirName       string             `yaml:"dirname"`
-	Package       string             `yaml:"package,omitempty"`
-	CurrentSchema string             `yaml:"schema,omitempty"`
-	ForeignIDs    *[]ForeignIDColumn `yaml:"foreignids,omitempty"`
+	Activate   bool               `yaml:"activate,omitempty"`
+	ForeignIDs *[]ForeignIDColumn `yaml:"foreignids,omitempty"`
 }
 
 type ForeignIDColumn struct {
@@ -175,10 +173,10 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 		},
 	}
 
-	if cfg.Federation.DirName != "" {
-		config.AutoBind = gqlcon.StringList{cfg.Federation.DirName}
-		config.Federation.Filename = cfg.Federation.DirName + "/federation.go"
-		config.Federation.Package = cfg.Federation.Package
+	if cfg.Federation.Schema != "" {
+		config.AutoBind = gqlcon.StringList{cfg.Graph.DirName}
+		config.Federation.Filename = cfg.Graph.DirName + "/federation.go"
+		config.Federation.Package = cfg.Graph.Package
 	}
 
 	preGlobbing := config.SchemaFilename

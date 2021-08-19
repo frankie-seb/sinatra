@@ -342,7 +342,7 @@ func SchemaGet(
 				// 	isProgrammer: Boolean!
 				// 	organization: Organization!
 				// }
-				if cfg.Federation.DirName != "" {
+				if cfg.Federation.Schema != "" {
 					keys := []string{}
 					for _, field := range model.Fields {
 
