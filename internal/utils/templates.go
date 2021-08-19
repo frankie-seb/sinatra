@@ -51,9 +51,6 @@ func WriteTemplateFile(fileName string, cfg Options) error {
 	content, contentError := GetTemplateContent(cfg)
 	importFixedContent, importsError := imports.Process(fileName, []byte(content), nil)
 
-	fmt.Printf("******* CONTENT %+v \n", content)
-	fmt.Printf("******* CONTENT ERROR %+v \n", contentError)
-
 	fSet := token.NewFileSet()
 	node, err := decorator.ParseFile(fSet, "src.go", string(importFixedContent), parser.ParseComments)
 	if err != nil {

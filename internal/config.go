@@ -163,13 +163,13 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
 		},
 		"ConnectionForwardPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionForwardPagination"},
 		},
 		"ConnectionPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionPagination"},
 		},
 		"SortDirection": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.SortDirection"},
 		},
 	}
 
