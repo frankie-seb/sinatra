@@ -12,7 +12,7 @@ import (
 func init() { //nolint:gochecknoinits
 	fmt.Println("______               _    _        _    _            _ _   _\n|  ____|             | |  (_)      | |  | |          | | | | |\n| |__ _ __ __ _ _ __ | | ___  ___  | |__| | ___  __ _| | |_| |__\n|  __| '__/ _` | '_ \\| |/ / |/ _ \\ |  __  |/ _ \\/ _` | | __| '_ \\\n| |  | | | (_| | | | |   <| |  __/ | |  | |  __/ (_| | | |_| | | |\n|_|  |_|  \\__,_|_| |_|_|\\_\\_|\\___| |_|  |_|\\___|\\__,_|_|\\__|_| |_|") //nolint:lll
 	fmt.Println("")
-	fmt.Println("Maddox - a transparent ORM.")
+	fmt.Println("Sinatra, a go ORM that will light up your ears.")
 	fmt.Println("")
 }
 
