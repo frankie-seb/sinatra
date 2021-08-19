@@ -12,7 +12,6 @@ import (
 	"github.com/frankie-seb/sinatra/internal"
 	"github.com/frankie-seb/sinatra/internal/utils"
 
-	con "github.com/frankie-seb/sinatra/config"
 	"github.com/rs/zerolog/log"
 
 	"github.com/iancoleman/strcase"
@@ -21,7 +20,7 @@ import (
 	"github.com/99designs/gqlgen/plugin"
 )
 
-func NewResolverPlugin(cfg *con.Config) plugin.Plugin {
+func NewResolverPlugin(cfg *internal.Config) plugin.Plugin {
 	return &ResolverPlugin{
 		cfg:            cfg,
 		rootImportPath: utils.GetRootImportPath(),
@@ -37,7 +36,7 @@ type AuthorizationScope struct {
 }
 
 type ResolverPlugin struct {
-	cfg            *con.Config
+	cfg            *internal.Config
 	rootImportPath string
 }
 

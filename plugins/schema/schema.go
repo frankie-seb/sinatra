@@ -8,8 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	con "github.com/frankie-seb/sinatra/config"
-
 	"github.com/frankie-seb/sinatra/internal"
 	"github.com/frankie-seb/sinatra/internal/utils"
 	"github.com/iancoleman/strcase"
@@ -27,7 +25,7 @@ type SchemaArr struct {
 }
 
 type HooksConfig struct {
-	cfg                *con.Config
+	cfg                *internal.Config
 	HookShouldAddModel func(model SchemaModel) bool
 	HookShouldAddField func(model SchemaModel, field SchemaField) bool
 	HookChangeField    func(model *SchemaModel, field *SchemaField)
@@ -105,7 +103,7 @@ const (
 	ParentTypeBatchCreate ParentType = "BatchCreate"
 )
 
-func SchemaWrite(cfg *con.Config, hooks *HooksConfig) error {
+func SchemaWrite(cfg *internal.Config, hooks *HooksConfig) error {
 	// Generate schema based on config
 	schema := SchemaGet(
 		cfg,
@@ -151,7 +149,7 @@ func groupByModelName(list []*SchemaModel) [][]*SchemaModel {
 
 //nolint:gocognit,gocyclo
 func SchemaGet(
-	cfg *con.Config,
+	cfg *internal.Config,
 	hooks *HooksConfig,
 ) []SchemaArr {
 	d := []SchemaArr{}
@@ -342,7 +340,7 @@ func SchemaGet(
 				// 	isProgrammer: Boolean!
 				// 	organization: Organization!
 				// }
-				if cfg.Federation.Schema != "" {
+				if cfg.Federation.Activate {
 					keys := []string{}
 					for _, field := range model.Fields {
 
@@ -611,7 +609,7 @@ func getFullType(fieldType string, isArray bool, isRequired bool) string {
 	return gType
 }
 
-func boilerModelsToModels(boilerModels []*utils.BoilerModel, foreignIDs *[]con.ForeignIDColumn) []*SchemaModel {
+func boilerModelsToModels(boilerModels []*utils.BoilerModel, foreignIDs *[]internal.ForeignIDColumn) []*SchemaModel {
 	a := make([]*SchemaModel, len(boilerModels))
 	for i, boilerModel := range boilerModels {
 		a[i] = &SchemaModel{
@@ -650,7 +648,7 @@ func executeHooksOnModels(models []*SchemaModel, hooks *HooksConfig) []*SchemaMo
 	return a
 }
 
-func boilerFieldsToFields(boilerFields []*utils.BoilerField, foreignIDs *[]con.ForeignIDColumn) []*SchemaField {
+func boilerFieldsToFields(boilerFields []*utils.BoilerField, foreignIDs *[]internal.ForeignIDColumn) []*SchemaField {
 	fields := make([]*SchemaField, len(boilerFields))
 	for i, boilerField := range boilerFields {
 		fields[i] = boilerFieldToField(boilerField, foreignIDs)
@@ -723,7 +721,7 @@ func getFieldType(schemaField *SchemaField, parentType ParentType) string {
 	}
 }
 
-func boilerFieldToField(boilerField *utils.BoilerField, foreignIDs *[]con.ForeignIDColumn) *SchemaField {
+func boilerFieldToField(boilerField *utils.BoilerField, foreignIDs *[]internal.ForeignIDColumn) *SchemaField {
 	t := toGraphQLType(boilerField, foreignIDs)
 	return NewSchemaField(toGraphQLName(boilerField.Name), t, boilerField)
 }
@@ -748,7 +746,7 @@ func toGraphQLName(fieldName string) string {
 	return strcase.ToLowerCamel(graphqlName)
 }
 
-func toGraphQLType(boilerField *utils.BoilerField, foreignIDs *[]con.ForeignIDColumn) string {
+func toGraphQLType(boilerField *utils.BoilerField, foreignIDs *[]internal.ForeignIDColumn) string {
 	lowerFieldName := strings.ToLower(boilerField.Name)
 	lowerBoilerType := strings.ToLower(boilerField.Type)
 

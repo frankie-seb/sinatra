@@ -1,4 +1,4 @@
-package config
+package internal
 
 import (
 	"io/ioutil"
@@ -20,7 +20,7 @@ type PackageConfig struct {
 	Package  string `yaml:"package,omitempty"`
 }
 
-type DirConfig struct {
+type BaseConfig struct {
 	DirName string `yaml:"dirname"`
 	Package string `yaml:"package,omitempty"`
 }
@@ -78,9 +78,9 @@ type DatabaseConfig struct {
 }
 
 type Config struct {
-	Model      DirConfig        `yaml:"model,omitempty"`
-	Helper     DirConfig        `yaml:"helper,omitempty"`
-	Graph      DirConfig        `yaml:"graph,omitempty"`
+	Model      BaseConfig       `yaml:"model,omitempty"`
+	Helper     BaseConfig       `yaml:"helper,omitempty"`
+	Graph      BaseConfig       `yaml:"graph,omitempty"`
 	Schema     SchemaConfig     `yaml:"schema,omitempty"`
 	Resolver   ResolverConfig   `yaml:"resolver,omitempty"`
 	Federation FederationConfig `yaml:"federation,omitempty"`
@@ -97,9 +97,9 @@ var path2regex = strings.NewReplacer(
 // DefaultConfig creates a copy of the default config
 func DefaultConfig() *Config {
 	return &Config{
-		Model:    DirConfig{DirName: "models", Package: "models"},
-		Helper:   DirConfig{DirName: "helpers", Package: "helpers"},
-		Graph:    DirConfig{DirName: "graph", Package: "graph"},
+		Model:    BaseConfig{DirName: "models", Package: "models"},
+		Helper:   BaseConfig{DirName: "helpers", Package: "helpers"},
+		Graph:    BaseConfig{DirName: "graph", Package: "graph"},
 		Schema:   SchemaConfig{DirName: "schema", Package: "schema"},
 		Database: DatabaseConfig{DBDriver: "psql", Debug: false, AddGlobal: true, AddPanic: false, NoContext: false, NoTests: false, NoHooks: false, NoRowsAffected: false, NoAutoTimestamps: false, AddSoftDeletes: true, Wipe: true, StructTagCasing: "camel"},
 	}
@@ -173,7 +173,7 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 		},
 	}
 
-	if cfg.Federation.Schema != "" {
+	if cfg.Federation.Activate {
 		config.AutoBind = gqlcon.StringList{cfg.Graph.DirName}
 		config.Federation.Filename = cfg.Graph.DirName + "/federation.go"
 		config.Federation.Package = cfg.Graph.Package

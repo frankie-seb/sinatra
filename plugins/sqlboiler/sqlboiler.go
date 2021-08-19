@@ -1,7 +1,7 @@
 package sqlboiler
 
 import (
-	"github.com/frankie-seb/sinatra/config"
+	"github.com/frankie-seb/sinatra/internal"
 	"github.com/pkg/errors"
 	"github.com/volatiletech/sqlboiler/v4/boilingcore"
 	_ "github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql/driver"
@@ -13,7 +13,7 @@ var (
 	cmdConfig *boilingcore.Config
 )
 
-func Run(cfg *config.Config) error {
+func Run(cfg *internal.Config) error {
 	// Get the configuration for the driver.
 	driverConfig, err := getPsqlDriverConfig(cfg)
 	if err != nil {
@@ -56,7 +56,7 @@ func Run(cfg *config.Config) error {
 
 }
 
-func getPsqlDriverConfig(cfg *config.Config) (map[string]interface{}, error) {
+func getPsqlDriverConfig(cfg *internal.Config) (map[string]interface{}, error) {
 	config := map[string]interface{}{
 		"dbname":    cfg.Database.DBName,
 		"host":      cfg.Database.Host,

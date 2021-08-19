@@ -8,8 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/frankie-seb/sinatra/config"
-	in "github.com/frankie-seb/sinatra/internal"
+	"github.com/frankie-seb/sinatra/internal"
 	"github.com/urfave/cli/v2"
 )
 
@@ -38,7 +37,7 @@ var (
 func initializeProject(ctx *cli.Context) error {
 	configFilename := ctx.String("config")
 
-	pkgName := in.ImportPathForDir(".")
+	pkgName := internal.ImportPathForDir(".")
 	if pkgName == "" {
 		return fmt.Errorf("unable to determine import path for current directory, you probably need to run go mod init first")
 	}
@@ -53,12 +52,12 @@ func initializeProject(ctx *cli.Context) error {
 }
 
 func configExists(configFilename string) bool {
-	var cfg *config.Config
+	var cfg *internal.Config
 
 	if configFilename != "" {
-		cfg, _ = config.LoadConfig(configFilename)
+		cfg, _ = internal.LoadConfig(configFilename)
 	} else {
-		cfg, _ = config.LoadConfigFromDefaultLocations()
+		cfg, _ = internal.LoadConfigFromDefaultLocations()
 	}
 	return cfg != nil
 }
@@ -72,7 +71,7 @@ func initConfig(configFilename string, pkgName string) error {
 		return fmt.Errorf("unable to create config dir: " + err.Error())
 	}
 
-	c, err := in.GetTemplateContent("config.gotpl")
+	c, err := internal.GetTemplateContent("config.gotpl")
 	if err != nil {
 		return fmt.Errorf("could not load template: %v", err)
 	}
