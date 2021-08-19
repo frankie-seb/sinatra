@@ -35,10 +35,16 @@ type HelperPlugin struct {
 	rootImportPath string
 }
 
+type FederationConfig struct {
+	Activate bool
+	Schema   string
+}
+
 type ModelBuild struct {
 	DbModels    internal.DirConfig
 	GraphModels internal.DirConfig
 	PackageName string
+	Federation  FederationConfig
 	Interfaces  []*Interface
 	Models      []*internal.Model
 	Enums       []*internal.Enum
@@ -98,6 +104,10 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 			PackageName: m.cfg.Graph.Package,
 		},
 		PackageName: m.cfg.Helper.Package,
+		Federation: FederationConfig{
+			Activate: m.cfg.Federation.Activate,
+			Schema:   m.cfg.Database.Schema,
+		},
 	}
 
 	cfg := copyConfig(*originalCfg)
@@ -163,10 +173,10 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 	// }
 
 	filesToGenerate := []string{
-		// "base.go",
-		// "lib.go",
+		"base.go",
+		"lib.go",
 		"common_filter.go",
-		// "preload.go",
+		"preload.go",
 	}
 
 	// We get all function names from helper repository to check if any customizations are available

@@ -35,7 +35,7 @@ import (
 )
 
 {{ range $enum := .Enums }}
-	func NullDotStringToPointer{{ .Name }}(v null.String) *{{ $.GqlModels.PackageName }}.{{ .Name }} {
+	func NullDotStringToPointer{{ .Name }}(v null.String) *{{ $.GraphModels.PackageName }}.{{ .Name }} {
 		s := StringTo{{ .Name }}(v.String)
 		if s == "" {
 			return nil
@@ -43,14 +43,14 @@ import (
 		return &s
 	}
 
-	func NullDotStringTo{{ .Name }}(v null.String) {{ $.GqlModels.PackageName }}.{{ .Name }} {
+	func NullDotStringTo{{ .Name }}(v null.String) {{ $.GraphModels.PackageName }}.{{ .Name }} {
 		if !v.Valid {
 			return ""
 		}
 		return StringTo{{ .Name }}(v.String)
 	}
 
-	func StringTo{{ .Name }}(v string) {{ $.GqlModels.PackageName }}.{{ .Name }} {
+	func StringTo{{ .Name }}(v string) {{ $.GraphModels.PackageName }}.{{ .Name }} {
 		{{- if $enum.HasBoilerEnum }}
 			return {{$enum.Name}}APIValue[v]
 		{{- else }}
@@ -58,7 +58,7 @@ import (
 		{{- end }}
 	}
 
-	func StringToPointer{{ .Name }}(v string) *{{ $.GqlModels.PackageName }}.{{ .Name }} {
+	func StringToPointer{{ .Name }}(v string) *{{ $.GraphModels.PackageName }}.{{ .Name }} {
 		s := StringTo{{ .Name }}(v)
 		if s == "" {
 			return nil
@@ -66,26 +66,26 @@ import (
 		return &s
 	}
 
-	func Pointer{{ .Name }}ToString(v *{{ $.GqlModels.PackageName }}.{{ .Name }}) string {
+	func Pointer{{ .Name }}ToString(v *{{ $.GraphModels.PackageName }}.{{ .Name }}) string {
 		if v == nil {
 			return ""
 		}
 		return {{ .Name }}ToString(*v)
 	}
 
-	func Pointer{{ .Name }}ToNullDotString(v *{{ $.GqlModels.PackageName }}.{{ .Name }}) null.String {
+	func Pointer{{ .Name }}ToNullDotString(v *{{ $.GraphModels.PackageName }}.{{ .Name }}) null.String {
 		if v == nil {
 			return null.NewString("", false)
 		}
 		return {{ .Name }}ToNullDotString(*v)
 	}
 
-	func {{ .Name }}ToNullDotString(v {{ $.GqlModels.PackageName }}.{{ .Name }}) null.String {
+	func {{ .Name }}ToNullDotString(v {{ $.GraphModels.PackageName }}.{{ .Name }}) null.String {
 		s := {{ .Name }}ToString(v)
 		return null.NewString(s, s != "")
 	}
 
-	func {{ .Name }}ToString(v {{ $.GqlModels.PackageName }}.{{ .Name }}) string {
+	func {{ .Name }}ToString(v {{ $.GraphModels.PackageName }}.{{ .Name }}) string {
 		{{- if $enum.HasBoilerEnum }}
 		return {{$enum.Name}}DBValue[v]
 		{{- else }}
@@ -93,7 +93,7 @@ import (
 		{{- end }}
 	}
 
-	func {{ .PluralName }}ToInterfaceArray(va []{{ $.GqlModels.PackageName }}.{{ .Name }}) []interface{} {
+	func {{ .PluralName }}ToInterfaceArray(va []{{ $.GraphModels.PackageName }}.{{ .Name }}) []interface{} {
 		var a []interface{}
 		for _, v := range va {
 			rv, ok := {{ .Name }}DBValue[v]
@@ -108,8 +108,8 @@ import (
 {{ range $model := .Models }}
 
 	{{- if .IsInput -}}
-		func {{ .PluralName }}ToBoiler(am []*{{ $.GqlModels.PackageName }}.{{ .Name }})( []*{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }}) {
-			ar := make([]*{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }}, len(am))
+		func {{ .PluralName }}ToBoiler(am []*{{ $.GraphModels.PackageName }}.{{ .Name }})( []*{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }}) {
+			ar := make([]*{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }}, len(am))
 			for i,m := range am {
 				ar[i] = {{ .Name }}ToBoiler(
 					m,
@@ -120,38 +120,38 @@ import (
 	{{ end }}
 	{{- if .IsNormal  -}}
 		{{- if .HasPrimaryStringID }}
-			func {{ .Name }}WithStringID(id string) *{{ $.GqlModels.PackageName }}.{{ .Name }} {
-				return &{{ $.GqlModels.PackageName }}.{{ .Name }}{
+			func {{ .Name }}WithStringID(id string) *{{ $.GraphModels.PackageName }}.{{ .Name }} {
+				return &{{ $.GraphModels.PackageName }}.{{ .Name }}{
 					ID: {{ $model.Name }}IDToGraphQL(id),
 				}
 			}
 
-			func {{ .Name }}WithNullDotStringID(id null.String) *{{ $.GqlModels.PackageName }}.{{ .Name }} {
+			func {{ .Name }}WithNullDotStringID(id null.String) *{{ $.GraphModels.PackageName }}.{{ .Name }} {
 				return {{ .Name }}WithStringID(id.String)
 			}
 		{{- else }}
-			func {{ .Name }}WithUintID(id uint) *{{ $.GqlModels.PackageName }}.{{ .Name }} {
-				return &{{ $.GqlModels.PackageName }}.{{ .Name }}{
+			func {{ .Name }}WithUintID(id uint) *{{ $.GraphModels.PackageName }}.{{ .Name }} {
+				return &{{ $.GraphModels.PackageName }}.{{ .Name }}{
 					ID: {{ $model.Name }}IDToGraphQL(id),
 				}
 			}
 
-			func {{ .Name }}WithIntID(id int) *{{ $.GqlModels.PackageName }}.{{ .Name }} {
+			func {{ .Name }}WithIntID(id int) *{{ $.GraphModels.PackageName }}.{{ .Name }} {
 				return {{ .Name }}WithUintID(uint(id))
 			}
 
-			func {{ .Name }}WithNullDotUintID(id null.Uint) *{{ $.GqlModels.PackageName }}.{{ .Name }} {
+			func {{ .Name }}WithNullDotUintID(id null.Uint) *{{ $.GraphModels.PackageName }}.{{ .Name }} {
 				return {{ .Name }}WithUintID(id.Uint)
 			}
 
-			func {{ .Name }}WithNullDotIntID(id null.Int) *{{ $.GqlModels.PackageName }}.{{ .Name }} {
+			func {{ .Name }}WithNullDotIntID(id null.Int) *{{ $.GraphModels.PackageName }}.{{ .Name }} {
 				return {{ .Name }}WithUintID(uint(id.Int))
 			}
 			
 		{{- end }}
 
-		func {{ .PluralName }}ToGraphQL(am []*{{ $.BoilerModels.PackageName }}.{{ .Name }})( []*{{ $.GqlModels.PackageName }}.{{ .Name }}) {
-			ar := make([]*{{ $.GqlModels.PackageName }}.{{ .Name }}, len(am))
+		func {{ .PluralName }}ToGraphQL(am []*{{ $.DbModels.PackageName }}.{{ .Name }})( []*{{ $.GraphModels.PackageName }}.{{ .Name }}) {
+			ar := make([]*{{ $.GraphModels.PackageName }}.{{ .Name }}, len(am))
 			for i,m := range am {
 				ar[i] = {{ .Name }}ToGraphQL(m)
 			}
@@ -161,12 +161,12 @@ import (
 		{{ range $field := .Fields }}
 			{{- if $field.IsPrimaryNumberID -}}
 				func {{ $model.Name }}IDToGraphQL(v uint) string {
-					return base_helpers.IDToGraphQL(v, {{ $.BoilerModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }})
+					return base_helpers.IDToGraphQL(v, {{ $.DbModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }})
 				}
 			{{- end -}}
 			{{- if $field.IsPrimaryStringID -}}
 				func {{ $model.Name }}IDToGraphQL(v string) string {
-					return base_helpers.StringIDToGraphQL(v, {{ $.BoilerModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }})
+					return base_helpers.StringIDToGraphQL(v, {{ $.DbModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }})
 				}
 			{{- end -}}
 		{{- end }}
@@ -194,7 +194,7 @@ import (
 		{{- end }}
 	{{ end }}
 	{{- if .IsFilter -}}
-		func {{ .Name }}ToMods(m *{{ $.GqlModels.PackageName }}.{{ .Name }}) []qm.QueryMod {
+		func {{ .Name }}ToMods(m *{{ $.GraphModels.PackageName }}.{{ .Name }}) []qm.QueryMod {
 			if m == nil {
 				return nil
 			}
@@ -216,7 +216,7 @@ import (
 		}
 	{{ end }}
 	{{- if .IsWhere  -}}
-		func {{ .Name }}SubqueryToMods(m *{{ $.GqlModels.PackageName }}.{{ .Name }}, foreignColumn string, parentTable string) []qm.QueryMod {
+		func {{ .Name }}SubqueryToMods(m *{{ $.GraphModels.PackageName }}.{{ .Name }}, foreignColumn string, parentTable string) []qm.QueryMod {
 			if m == nil {
 				return nil
 			}
@@ -229,7 +229,7 @@ import (
 			}
 		
 			subQueryMods := {{ .Name }}ToMods(m, !hasForeignKeyInRoot, parentTable)
-			subQuery := {{ $.BoilerModels.PackageName }}.{{.BoilerModel.PluralName}}(append(subQueryMods, qm.Select("1"))...)
+			subQuery := {{ $.DbModels.PackageName }}.{{.BoilerModel.PluralName}}(append(subQueryMods, qm.Select("1"))...)
 			if len(subQueryMods) > 0 {
 				if len(subQueryMods) > 0 && parentTable != "" && foreignColumn != "" {
 					subQueryMods = append(subQueryMods, qm.Where(fmt.Sprintf("%v.id = %v.%v", models.TableNames.{{ .BoilerModel.Name }}, parentTable, foreignColumn)))
@@ -254,7 +254,7 @@ import (
 	{{ end }}
 	{{- if .IsOrdering -}}
 
-        func {{ .BoilerModel.Name }}SortDirection(ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering) base_helpers.SortDirection {
+        func {{ .BoilerModel.Name }}SortDirection(ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering) base_helpers.SortDirection {
             for _, o := range ordering {
                 return o.Direction
             }
@@ -282,7 +282,7 @@ import (
 			return nil
 		}
 
-		func To{{ .BoilerModel.Name }}Cursor(ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, m *{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}) string {
+		func To{{ .BoilerModel.Name }}Cursor(ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, m *{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}) string {
 			var a []string
 			var handledID bool
 
@@ -291,7 +291,7 @@ import (
 					{{- if eq $field.Name "Sort" -}}
 						{{- range $value := $field.Enum.Values -}}
 							{{ if eq $value.Name "ID" }}
-							if order.Sort == {{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }} {
+							if order.Sort == {{ $.GraphModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }} {
 								handledID = true
 							}
 							{{ end }}
@@ -315,7 +315,7 @@ import (
 					{{- range $value := $field.Enum.Values}}
 						{{ if eq $value.Name "ID" }}
 							if !handledID {
-								a = append(a, base_helpers.ToCursorValue(string({{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }}), m.ID))
+								a = append(a, base_helpers.ToCursorValue(string({{ $.GraphModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }}), m.ID))
 							}
 						{{ end }}
 				{{- end -}}
@@ -326,7 +326,7 @@ import (
 			return base_helpers.CursorValuesToString(a)
 		}
 
-		func {{ .BoilerModel.Name }}CursorType(ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering) base_helpers.CursorType {
+		func {{ .BoilerModel.Name }}CursorType(ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering) base_helpers.CursorType {
 			countDirection, result := base_helpers.CursorTypeCounter()
 			for _, o := range ordering {
 				countDirection(o.Direction)
@@ -334,7 +334,7 @@ import (
 			return result()
 		}
 
-		func {{ .BoilerModel.Name }}CursorMods(ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, cursor *string, sign base_helpers.ComparisonSign) []qm.QueryMod {
+		func {{ .BoilerModel.Name }}CursorMods(ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, cursor *string, sign base_helpers.ComparisonSign) []qm.QueryMod {
 			if cursor != nil {
 				if {{ .BoilerModel.Name }}CursorType(ordering) == base_helpers.CursorTypeCursor {
 					return From{{ .BoilerModel.Name }}Cursor(*cursor, sign)
@@ -344,7 +344,7 @@ import (
 			return nil
 		}
 
-		func {{ .BoilerModel.Name }}SortMods(ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, reverse bool, defaultDirection base_helpers.SortDirection) []qm.QueryMod {
+		func {{ .BoilerModel.Name }}SortMods(ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, reverse bool, defaultDirection base_helpers.SortDirection) []qm.QueryMod {
 			var a []qm.QueryMod
 
 			var handledID bool
@@ -353,7 +353,7 @@ import (
 					{{- if eq $field.Name "Sort" -}}
 						{{- range $value := $field.Enum.Values -}}
 							{{ if eq $value.Name "ID" }}
-								if order.Sort == {{ $.GqlModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }} {
+								if order.Sort == {{ $.GraphModels.PackageName }}.{{ $field.Enum.Name|go }}{{ .Name|go }} {
 									handledID = true
 								}
 							{{ end }}
@@ -375,7 +375,7 @@ import (
 			}
 			if !handledID {
 				a = append(a, qm.OrderBy(base_helpers.GetOrderBy(
-					{{ $.BoilerModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.ID,
+					{{ $.DbModels.PackageName }}.{{ $model.BoilerModel.Name }}Columns.ID,
 					base_helpers.GetDirection(defaultDirection, reverse),
 				)))
 			}
@@ -383,7 +383,7 @@ import (
 		}
 
 
-		func {{ .BoilerModel.Name }}PaginationModsBase(pagination base_helpers.ConnectionPagination, ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, reverse bool, limit int) (*string, []qm.QueryMod) {
+		func {{ .BoilerModel.Name }}PaginationModsBase(pagination base_helpers.ConnectionPagination, ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, reverse bool, limit int) (*string, []qm.QueryMod) {
 			direction := {{ .BoilerModel.Name }}SortDirection(ordering)
 			cursor := base_helpers.GetCursor(pagination.Forward, pagination.Backward)
 			sign := base_helpers.GetComparison(pagination.Forward, pagination.Backward, reverse, direction)
@@ -395,7 +395,7 @@ import (
 			return cursor, mods
 		}
 		
-		func {{ .BoilerModel.Name }}PaginationMods(pagination base_helpers.ConnectionPagination, ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering) ([]qm.QueryMod, error) {
+		func {{ .BoilerModel.Name }}PaginationMods(pagination base_helpers.ConnectionPagination, ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering) ([]qm.QueryMod, error) {
 			if pagination.Forward != nil && pagination.Backward != nil {
 				return nil, errors.New("can not use forward and backward pagination at once")
 			}
@@ -409,7 +409,7 @@ import (
 			return mods, nil
 		}
 		
-		func To{{ .BoilerModel.Name }}CursorSwitch(ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, m *{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}, cursorType base_helpers.CursorType, offset int, index int) string {
+		func To{{ .BoilerModel.Name }}CursorSwitch(ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering, m *{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}, cursorType base_helpers.CursorType, offset int, index int) string {
 			switch cursorType {
 			case base_helpers.CursorTypeOffset:
 				return base_helpers.ToOffsetCursor(offset + index)
@@ -423,30 +423,30 @@ import (
 			ctx context.Context,
 			db boil.ContextExecutor,
 			pagination base_helpers.ConnectionPagination,
-			ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering,
+			ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering,
 		) (bool, error) {
 			reverse := pagination.Forward != nil
 			cursor, reverseMods := {{ .BoilerModel.Name }}PaginationModsBase(pagination, ordering, reverse, 1)
 			reverseMods = append(reverseMods, qm.GroupBy("id"))
 			cursorType := {{ .BoilerModel.Name }}CursorType(ordering)
 			return base_helpers.HasReversePage(cursor, pagination, cursorType, func() (int64, error) {
-				return {{ $.BoilerModels.PackageName }}.{{ .BoilerModel.PluralName }}(reverseMods...).Count(ctx, db)
+				return {{ $.DbModels.PackageName }}.{{ .BoilerModel.PluralName }}(reverseMods...).Count(ctx, db)
 			})
 		}
 		
-		func {{ .BoilerModel.Name }}EdgeConverter(pagination base_helpers.ConnectionPagination, ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering) func(*{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }}, int) *{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Edge {
+		func {{ .BoilerModel.Name }}EdgeConverter(pagination base_helpers.ConnectionPagination, ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering) func(*{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }}, int) *{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Edge {
 			cursor, cursorType := base_helpers.GetCursor(pagination.Forward, pagination.Backward), {{ .BoilerModel.Name }}CursorType(ordering)
 			offset := base_helpers.GetOffsetFromCursor(cursor)
-			return func(m *{{ $.BoilerModels.PackageName }}.{{ .BoilerModel.Name }}, i int) *{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Edge {
+			return func(m *{{ $.DbModels.PackageName }}.{{ .BoilerModel.Name }}, i int) *{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Edge {
 				n := {{ .BoilerModel.Name }}ToGraphQL(m)
-				return &{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Edge{
+				return &{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Edge{
 					Cursor: To{{ .BoilerModel.Name }}CursorSwitch(ordering, n, cursorType, offset, i),
 					Node:   n,
 				}
 			}
 		}
 		
-		func {{ .BoilerModel.Name }}StartEndCursor(edges []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Edge) (*string, *string) {
+		func {{ .BoilerModel.Name }}StartEndCursor(edges []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Edge) (*string, *string) {
 			var startCursor, endCursor *string
 			if len(edges) >= 2 {
 				s, e := edges[0].Cursor, edges[len(edges)-1].Cursor
@@ -465,8 +465,8 @@ import (
 			db boil.ContextExecutor,
 			originalMods []qm.QueryMod,
 			pagination base_helpers.ConnectionPagination,
-			ordering []*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Ordering,
-		) (*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Connection, error) {
+			ordering []*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Ordering,
+		) (*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Connection, error) {
 			paginationMods, err := {{ .BoilerModel.Name }}PaginationMods(pagination, ordering)
 			if err != nil {
 				return nil, err
@@ -477,7 +477,7 @@ import (
 				return nil, err
 			}
 		
-			a, err := {{ $.BoilerModels.PackageName }}.{{ .BoilerModel.PluralName }}(append(originalMods, paginationMods...)...).All(ctx, db)
+			a, err := {{ $.DbModels.PackageName }}.{{ .BoilerModel.PluralName }}(append(originalMods, paginationMods...)...).All(ctx, db)
 			if err != nil {
 				return nil, err
 			}
@@ -485,24 +485,24 @@ import (
 			l := base_helpers.ExistsInContextQuery(ctx, "count")
 			var count int
 			if l == true && len(originalMods) != 0 {
-				c, err := {{ $.BoilerModels.PackageName }}.{{ .BoilerModel.PluralName }}(append(originalMods)...).Count(ctx, db)
+				c, err := {{ $.DbModels.PackageName }}.{{ .BoilerModel.PluralName }}(append(originalMods)...).Count(ctx, db)
 				if err != nil {
 					return nil, err
 				}
 				count = int(c)
 			}
 
-			edges := make([]*{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Edge, 0, base_helpers.EdgeLength(pagination, len(a)))
+			edges := make([]*{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Edge, 0, base_helpers.EdgeLength(pagination, len(a)))
 			edgeConverter := {{ .BoilerModel.Name }}EdgeConverter(pagination, ordering)
 			hasMore := base_helpers.BaseConnection(pagination, len(a), func(i int) {
 				edges = append(edges, edgeConverter(a[i], i))
 			})
 			startCursor, endCursor := {{ .BoilerModel.Name }}StartEndCursor(edges)
 			hasNextPage, hasPreviousPage := base_helpers.HasNextAndPreviousPage(pagination, hasMore, hasMoreReversed)
-			return &{{ $.GqlModels.PackageName }}.{{ .BoilerModel.Name }}Connection{
+			return &{{ $.GraphModels.PackageName }}.{{ .BoilerModel.Name }}Connection{
 				Count: &count,
 				Edges: edges,
-				PageInfo: &{{ $.GqlModels.PackageName }}.PageInfo{
+				PageInfo: &{{ $.GraphModels.PackageName }}.PageInfo{
 					HasNextPage:     hasNextPage,
 					HasPreviousPage: hasPreviousPage,
 					StartCursor:     startCursor,

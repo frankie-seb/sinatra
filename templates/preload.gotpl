@@ -38,11 +38,11 @@ import (
 var TablePreloadMap = map[string]map[string]base_helpers.ColumnSetting{
 	{{ range $model := .Models -}}
 	{{ if $model.IsPreloadable -}}
-		{{ $.BoilerModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }}: {
+		{{ $.DbModels.PackageName }}.TableNames.{{- $model.BoilerModel.TableName }}: {
 			{{- range $value := $model.PreloadArray }}
 				 "{{$value.Key}}": {
 					 Name: {{$value.ColumnSetting.Name}},
-					 RelationshipModelName: {{ $.BoilerModels.PackageName }}.TableNames.{{$value.ColumnSetting.RelationshipModelName}},
+					 RelationshipModelName: {{ $.DbModels.PackageName }}.TableNames.{{$value.ColumnSetting.RelationshipModelName}},
 					 IDAvailable: {{$value.ColumnSetting.IDAvailable}},
 				},
 			{{- end }}
@@ -54,13 +54,13 @@ var TablePreloadMap = map[string]map[string]base_helpers.ColumnSetting{
 {{ range $model := .Models }}
 	{{ if $model.IsPreloadable -}}
 	func Get{{ .Name }}PreloadMods(ctx context.Context) (queryMods []qm.QueryMod) {
-		return base_helpers.GetPreloadModsWithLevel(ctx, TablePreloadMap, {{ $.BoilerModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }}, "")
+		return base_helpers.GetPreloadModsWithLevel(ctx, TablePreloadMap, {{ $.DbModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }}, "")
 	}
 	func Get{{ .Name }}NodePreloadMods(ctx context.Context) (queryMods []qm.QueryMod) {
-		return base_helpers.GetPreloadModsWithLevel(ctx, TablePreloadMap, {{ $.BoilerModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }}, DefaultLevels.EdgesNode)
+		return base_helpers.GetPreloadModsWithLevel(ctx, TablePreloadMap, {{ $.DbModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }}, DefaultLevels.EdgesNode)
 	}
 	func Get{{ .Name }}PreloadModsWithLevel(ctx context.Context, level string) (queryMods []qm.QueryMod) {
-		return base_helpers.GetPreloadModsWithLevel(ctx, TablePreloadMap, {{ $.BoilerModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }}, level)
+		return base_helpers.GetPreloadModsWithLevel(ctx, TablePreloadMap, {{ $.DbModels.PackageName }}.TableNames.{{ $model.BoilerModel.TableName }}, level)
 	}
 	{{ end -}}
 {{- end }}
