@@ -155,7 +155,7 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 	config.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName + "/*.graphql"}
 	config.Exec.Filename = cfg.Graph.DirName + "/exec.go"
 	config.Exec.Package = cfg.Graph.Package
-	config.Model.Filename = cfg.Model.DirName + "models.go"
+	config.Model.Filename = cfg.Model.DirName + "/models.go"
 	config.Model.Package = cfg.Model.Package
 	config.Resolver.Filename = cfg.Resolver.DirName + "/resolver.go"
 	config.Models = gqlcon.TypeMap{
