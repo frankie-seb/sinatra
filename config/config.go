@@ -139,7 +139,8 @@ func LoadConfigFromDefaultLocations() (*Config, error) {
 func LoadGqlgenConfig(cfg *Config) *gqlcon.Config {
 	var gql *gqlcon.Config
 
-	fmt.Println("*****", cfg)
+	fmt.Printf("***** %+v", cfg)
+	fmt.Println("*****", cfg.Schema.DirName)
 
 	gql.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName}
 	gql.Exec.Filename = cfg.Graph.DirName
