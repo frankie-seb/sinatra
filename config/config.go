@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -137,29 +136,33 @@ func LoadConfigFromDefaultLocations() (*Config, error) {
 
 // GenerateGqlgenConfig
 func LoadGqlgenConfig(cfg *Config) *gqlcon.Config {
-	var gql *gqlcon.Config
 
-	fmt.Printf("***** %+v", cfg)
-	fmt.Println("***** \n", gqlcon.StringList{cfg.Schema.DirName})
-
-	// gql.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName}
-	gql.Exec.Filename = cfg.Graph.DirName
-	gql.Exec.Package = cfg.Graph.Package
-	gql.Model.Filename = cfg.Model.DirName
-	gql.Model.Package = cfg.Model.Package
-	gql.Resolver.Filename = cfg.Resolver.DirName
-	gql.Models = gqlcon.TypeMap{
-		"ConnectionBackwardPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+	gql := &gqlcon.Config{
+		SchemaFilename: gqlcon.StringList{cfg.Schema.DirName},
+		Exec: gqlcon.PackageConfig{
+			Filename: cfg.Graph.DirName,
+			Package:  cfg.Graph.Package,
 		},
-		"ConnectionForwardPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		Model: gqlcon.PackageConfig{
+			Filename: cfg.Model.DirName,
+			Package:  cfg.Model.Package,
 		},
-		"ConnectionPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		Resolver: gqlcon.ResolverConfig{
+			Filename: cfg.Resolver.DirName,
 		},
-		"SortDirection": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		Models: gqlcon.TypeMap{
+			"ConnectionBackwardPagination": gqlcon.TypeMapEntry{
+				Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+			},
+			"ConnectionForwardPagination": gqlcon.TypeMapEntry{
+				Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+			},
+			"ConnectionPagination": gqlcon.TypeMapEntry{
+				Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+			},
+			"SortDirection": gqlcon.TypeMapEntry{
+				Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+			},
 		},
 	}
 
