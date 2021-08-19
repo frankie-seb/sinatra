@@ -11,7 +11,6 @@ import (
 
 	"github.com/99designs/gqlgen/codegen/config"
 	"github.com/99designs/gqlgen/plugin"
-	con "github.com/frankie-seb/sinatra/config"
 	"github.com/frankie-seb/sinatra/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog/log"
@@ -24,7 +23,7 @@ func init() {
 	pathRegex = regexp.MustCompile(`src/(.*)`)
 }
 
-func NewHelperPlugin(cfg *con.Config) plugin.Plugin {
+func NewHelperPlugin(cfg *internal.Config) plugin.Plugin {
 	return &HelperPlugin{
 		cfg:            cfg,
 		rootImportPath: utils.GetRootImportPath(),
@@ -32,7 +31,7 @@ func NewHelperPlugin(cfg *con.Config) plugin.Plugin {
 }
 
 type HelperPlugin struct {
-	cfg            *con.Config
+	cfg            *internal.Config
 	rootImportPath string
 }
 

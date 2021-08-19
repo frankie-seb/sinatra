@@ -6,7 +6,7 @@ import (
 
 	"github.com/99designs/gqlgen/api"
 	gqlcon "github.com/99designs/gqlgen/codegen/config"
-	"github.com/frankie-seb/sinatra/config"
+	"github.com/frankie-seb/sinatra/internal"
 	"github.com/frankie-seb/sinatra/plugins/helpers"
 	"github.com/frankie-seb/sinatra/plugins/resolvers"
 	"github.com/frankie-seb/sinatra/plugins/schema"
@@ -25,18 +25,18 @@ var (
 			&cli.StringFlag{Name: "skip-db, sdb", Usage: "where to write the server stub to"},
 		},
 		Action: func(ctx *cli.Context) error {
-			var cfg *config.Config
+			var cfg *internal.Config
 			var gqlcfg *gqlcon.Config
 			var err error
 			if configFilename := ctx.String("config"); configFilename != "" {
-				cfg, err = config.LoadConfig(configFilename)
+				cfg, err = internal.LoadConfig(configFilename)
 				if err != nil {
 					return err
 				}
 			} else {
-				cfg, err = config.LoadConfigFromDefaultLocations()
+				cfg, err = internal.LoadConfigFromDefaultLocations()
 				if os.IsNotExist(errors.Cause(err)) {
-					cfg, err = config.LoadDefaultConfig()
+					cfg, err = internal.LoadDefaultConfig()
 				}
 
 				if err != nil {
@@ -61,9 +61,7 @@ var (
 			}
 
 			// Generate the gqlgen config
-			gqlcfg, err = config.LoadGqlgenConfig(cfg)
-
-			fmt.Printf("***** %+v", gqlcfg)
+			gqlcfg, err = internal.LoadGqlgenConfig(cfg)
 
 			if err != nil {
 				fmt.Println("error while trying to generate the config")

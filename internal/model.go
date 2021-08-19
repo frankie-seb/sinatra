@@ -8,7 +8,6 @@ import (
 
 	"github.com/99designs/gqlgen/codegen/config"
 	gqlgenTemplates "github.com/99designs/gqlgen/codegen/templates"
-	con "github.com/frankie-seb/sinatra/config"
 	"github.com/frankie-seb/sinatra/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog/log"
@@ -142,7 +141,7 @@ func GetModelsWithInformation(
 	cfg *config.Config,
 	boilerModels []*utils.BoilerModel,
 	ignoreTypePrefixes []string,
-	foreignIDs *[]con.ForeignIDColumn) []*Model {
+	foreignIDs *[]ForeignIDColumn) []*Model {
 	// get models based on the schema and sqlboiler structs
 	models := getModelsFromSchema(cfg.Schema, boilerModels)
 
@@ -161,7 +160,7 @@ func GetModelsWithInformation(
 }
 
 func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Config,
-	models []*Model, ignoreTypePrefixes []string, foreignIDs *[]con.ForeignIDColumn) {
+	models []*Model, ignoreTypePrefixes []string, foreignIDs *[]ForeignIDColumn) {
 	binder := cfg.NewBinder()
 
 	// Generate the basic of the fields
