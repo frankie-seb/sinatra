@@ -1,14 +1,16 @@
-package plugins
+package schema
 
 import (
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
-	"regexp"
 	"sort"
 	"strings"
 
+	con "github.com/frankie-seb/sinatra/config"
+
+	"github.com/frankie-seb/sinatra/internal"
 	"github.com/frankie-seb/sinatra/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog/log"
@@ -24,22 +26,13 @@ type SchemaArr struct {
 	Data string
 }
 
-type SchemaConfig struct {
-	BoilerModelDirectory     Config
-	Directives               []string
-	SkipInputFields          []string
-	GenerateCommonTypes      bool
-	GenerateBatchCreate      bool
-	GenerateMutations        bool
-	GenerateBatchDelete      bool
-	GenerateBatchUpdate      bool
-	GenerateFederatedService bool
-	SchemaIDColumns          *[]SchemaCols
-	HookShouldAddModel       func(model SchemaModel) bool
-	HookShouldAddField       func(model SchemaModel, field SchemaField) bool
-	HookChangeField          func(model *SchemaModel, field *SchemaField)
-	HookChangeFields         func(model *SchemaModel, fields []*SchemaField, parenType ParentType) []*SchemaField
-	HookChangeModel          func(model *SchemaModel)
+type HooksConfig struct {
+	cfg                *con.Config
+	HookShouldAddModel func(model SchemaModel) bool
+	HookShouldAddField func(model SchemaModel, field SchemaField) bool
+	HookChangeField    func(model *SchemaModel, field *SchemaField)
+	HookChangeFields   func(model *SchemaModel, fields []*SchemaField, parenType ParentType) []*SchemaField
+	HookChangeModel    func(model *SchemaModel)
 }
 
 type SchemaGenerateConfig struct {
@@ -112,26 +105,19 @@ const (
 	ParentTypeBatchCreate ParentType = "BatchCreate"
 )
 
-func SchemaWrite(config SchemaConfig, outputFile string, generateOptions SchemaGenerateConfig) error {
+func SchemaWrite(cfg *con.Config, hooks *HooksConfig) error {
 	// Generate schema based on config
 	schema := SchemaGet(
-		config,
+		cfg,
+		hooks,
 	)
 
 	for _, s := range schema {
-
-		if utils.FileExists(outputFile) && generateOptions.MergeSchema {
-			if err := mergeContentInFile(s.Data, outputFile+"schema/"+s.Name+"_gen.graphql"); err != nil {
-				log.Err(err).Msg("Could not write schema to disk")
-				return err
-			}
-		} else {
-			if err := writeContentToFile(s.Data, outputFile+"schema/"+strings.ToLower(s.Name)+"_gen.graphql"); err != nil {
-				log.Err(err).Msg("Could not write schema to disk")
-				return err
-			}
-			formatFile(outputFile + "schema/" + strings.ToLower(s.Name) + "_gen.graphql")
+		if err := writeContentToFile(s.Data, "schema/"+strings.ToLower(s.Name)+"_gen.graphql"); err != nil {
+			log.Err(err).Msg("Could not write schema to disk")
+			return err
 		}
+		formatFile("schema/" + strings.ToLower(s.Name) + "_gen.graphql")
 	}
 
 	return nil
@@ -145,13 +131,6 @@ func getDirectivesAsString(va []string) string {
 	return strings.Join(a, " ")
 }
 
-func getFirstWord(str string) string {
-	re := regexp.MustCompile(`^([aA-zZ][a-z0-9_\-]+)`)
-	w := re.FindString(str)
-	strW := strings.Trim(w, " ")
-	return strW
-}
-
 func groupByModelName(list []*SchemaModel) [][]*SchemaModel {
 	sort.Slice(list, func(i, j int) bool { return list[i].Name < list[j].Name })
 	r := make([][]*SchemaModel, 0)
@@ -161,7 +140,7 @@ func groupByModelName(list []*SchemaModel) [][]*SchemaModel {
 		if i >= len(list) {
 			break
 		}
-		for j = i + 1; j < len(list) && getFirstWord(list[i].Name) == getFirstWord(list[j].Name); j++ {
+		for j = i + 1; j < len(list) && internal.GetFirstWord(list[i].Name) == internal.GetFirstWord(list[j].Name); j++ {
 		}
 
 		r = append(r, list[i:j])
@@ -172,22 +151,23 @@ func groupByModelName(list []*SchemaModel) [][]*SchemaModel {
 
 //nolint:gocognit,gocyclo
 func SchemaGet(
-	config SchemaConfig,
+	cfg *con.Config,
+	hooks *HooksConfig,
 ) []SchemaArr {
 	d := []SchemaArr{}
 	g := &SimpleWriter{}
 	e := &SimpleWriter{}
 
 	// Parse models and their fields based on the sqlboiler model directory
-	boilerModels, boilerEnums := utils.GetBoilerModels(config.BoilerModelDirectory.Directory)
+	boilerModels, boilerEnums := utils.GetBoilerModels(cfg.Model.DirName)
 
-	models := executeHooksOnModels(boilerModelsToModels(boilerModels, config.SchemaIDColumns), config)
+	models := executeHooksOnModels(boilerModelsToModels(boilerModels, cfg.Federation.ForeignIDs), hooks)
 
 	grpMod := groupByModelName(models)
 
 	// Directives GraphQL
-	fullDirectives := make([]string, len(config.Directives))
-	for i, defaultDirective := range config.Directives {
+	fullDirectives := make([]string, len(cfg.Schema.Directives))
+	for i, defaultDirective := range cfg.Schema.Directives {
 		fullDirectives[i] = "@" + defaultDirective
 	}
 
@@ -205,18 +185,15 @@ func SchemaGet(
 
 	g.l(`schema {`)
 	g.tl(`query: Query`)
-	if config.GenerateMutations {
-		g.tl(`mutation: Mutation`)
-	}
+	g.tl(`mutation: Mutation`)
 	g.l(`}`)
 
 	g.br()
 
-	if config.GenerateCommonTypes {
-		g.l("type Query {")
-		g.tl("node(id: ID!): Node")
-		g.l(`}`)
-	}
+	// Common Types
+	g.l("type Query {")
+	g.tl("node(id: ID!): Node")
+	g.l(`}`)
 
 	g.l(`interface Node {`)
 	g.tl(`id: ID!`)
@@ -310,10 +287,8 @@ func SchemaGet(
 
 				// create multiple
 				// e.g createUsers(input: [UsersInput!]!): UsersPayload!
-				if config.GenerateBatchCreate {
-					w.tl("create" + modelPluralName + "(input: " + modelPluralName + "CreateInput!): " +
-						modelPluralName + "Payload!" + joinedDirectives)
-				}
+				w.tl("create" + modelPluralName + "(input: " + modelPluralName + "CreateInput!): " +
+					modelPluralName + "Payload!" + joinedDirectives)
 
 				// update single
 				// e.g updateUser(id: ID!, input: UserInput!): UserPayload!
@@ -322,10 +297,8 @@ func SchemaGet(
 
 				// update multiple (batch update)
 				// e.g updateUsers(filter: UserFilter, input: UsersInput!): UsersPayload!
-				if config.GenerateBatchUpdate {
-					w.tl("update" + modelPluralName + "(filter: " + model.Name + "Filter, input: " +
-						model.Name + "UpdateInput!): " + modelPluralName + "UpdatePayload!" + joinedDirectives)
-				}
+				w.tl("update" + modelPluralName + "(filter: " + model.Name + "Filter, input: " +
+					model.Name + "UpdateInput!): " + modelPluralName + "UpdatePayload!" + joinedDirectives)
 
 				// delete single
 				// e.g deleteUser(id: ID!): UserPayload!
@@ -333,10 +306,9 @@ func SchemaGet(
 
 				// delete multiple
 				// e.g deleteUsers(filter: UserFilter, input: [UsersInput!]!): UsersPayload!
-				if config.GenerateBatchDelete {
-					w.tl("delete" + modelPluralName + "(filter: " + model.Name + "Filter): " +
-						modelPluralName + "DeletePayload!" + joinedDirectives)
-				}
+				w.tl("delete" + modelPluralName + "(filter: " + model.Name + "Filter): " +
+					modelPluralName + "DeletePayload!" + joinedDirectives)
+
 			}
 			w.l("}")
 			w.br()
@@ -370,7 +342,7 @@ func SchemaGet(
 				// 	isProgrammer: Boolean!
 				// 	organization: Organization!
 				// }
-				if config.GenerateFederatedService {
+				if cfg.Federation.DirName != "" {
 					keys := []string{}
 					for _, field := range model.Fields {
 
@@ -383,7 +355,7 @@ func SchemaGet(
 					w.l("type " + model.Name + " implements Node {")
 				}
 
-				for _, field := range enhanceFields(config, model, model.Fields, ParentTypeNormal) {
+				for _, field := range enhanceFields(hooks, model, model.Fields, ParentTypeNormal) {
 					// e.g we have foreign key from user to organization
 					// organizationID is clutter in your scheme
 					// you only want Organization and OrganizationID should be skipped
@@ -452,7 +424,7 @@ func SchemaGet(
 				// }
 				w.l("input " + model.Name + "Where {")
 
-				for _, field := range enhanceFields(config, model, model.Fields, ParentTypeWhere) {
+				for _, field := range enhanceFields(hooks, model, model.Fields, ParentTypeWhere) {
 					directives := getDirectivesAsString(field.InputDirectives)
 					if field.SkipInput || field.SkipWhere {
 						continue
@@ -472,141 +444,132 @@ func SchemaGet(
 				w.br()
 
 				// Generate input and payloads for mutatations
-				if config.GenerateMutations { //nolint:nestif
-					filteredFields := fieldsWithout(model.Fields, config.SkipInputFields)
+				filteredFields := fieldsWithout(model.Fields, cfg.Schema.SkipInputFields)
 
-					modelPluralName := utils.Plural(model.Name)
-					// input UserCreateInput {
-					// 	firstName: String!
-					// 	lastName: String
-					//	organizationId: ID!
-					// }
-					w.l("input " + model.Name + "CreateInput {")
+				modelPluralName := utils.Plural(model.Name)
+				// input UserCreateInput {
+				// 	firstName: String!
+				// 	lastName: String
+				//	organizationId: ID!
+				// }
+				w.l("input " + model.Name + "CreateInput {")
 
-					for _, field := range enhanceFields(config, model, filteredFields, ParentTypeCreate) {
-						if field.SkipInput || field.SkipCreate {
-							continue
-						}
-						// id is not required in create and will be specified in update resolver
-						if field.Name == "id" || field.Name == "createdAt" || field.Name == "updatedAt" || field.Name == "deletedAt" {
-							continue
-						}
-						// not possible yet in input
-						// TODO: make this possible for one-to-one structs?
-						// only for foreign keys inside model itself
-						if field.BoilerField.IsRelation && field.BoilerField.IsArray ||
-							field.BoilerField.IsRelation && !strings.HasSuffix(field.BoilerField.Name, "ID") {
-							continue
-						}
-						directives := getDirectivesAsString(field.InputDirectives)
-						fullType := getFinalFullType(field, ParentTypeCreate)
-						w.tl(field.Name + ": " + fullType + directives)
+				for _, field := range enhanceFields(hooks, model, filteredFields, ParentTypeCreate) {
+					if field.SkipInput || field.SkipCreate {
+						continue
 					}
-					w.l("}")
-
-					w.br()
-
-					// input UserUpdateInput {
-					// 	firstName: String!
-					// 	lastName: String
-					//	organizationId: ID!
-					// }
-					w.l("input " + model.Name + "UpdateInput {")
-
-					for _, field := range enhanceFields(config, model, filteredFields, ParentTypeUpdate) {
-						if field.SkipInput || field.SkipUpdate {
-							continue
-						}
-						// id is not required in create and will be specified in update resolver
-						if field.Name == "id" || field.Name == "createdAt" || field.Name == "updatedAt" || field.Name == "deletedAt" {
-							continue
-						}
-						// not possible yet in input
-						// TODO: make this possible for one-to-one structs?
-						// only for foreign keys inside model itself
-						if field.BoilerField.IsRelation && field.BoilerField.IsArray ||
-							field.BoilerField.IsRelation && !strings.HasSuffix(field.BoilerField.Name, "ID") {
-							continue
-						}
-						directives := getDirectivesAsString(field.InputDirectives)
-						w.tl(field.Name + ": " + getFinalFullType(field, ParentTypeUpdate) + directives)
+					// id is not required in create and will be specified in update resolver
+					if field.Name == "id" || field.Name == "createdAt" || field.Name == "updatedAt" || field.Name == "deletedAt" {
+						continue
 					}
-					w.l("}")
-
-					w.br()
-
-					if config.GenerateBatchCreate {
-						w.l("input " + modelPluralName + "CreateInput {")
-
-						w.tl(strcase.ToLowerCamel(modelPluralName) + ": [" + model.Name + "CreateInput!]!")
-						w.l("}")
-
-						w.br()
+					// not possible yet in input
+					// TODO: make this possible for one-to-one structs?
+					// only for foreign keys inside model itself
+					if field.BoilerField.IsRelation && field.BoilerField.IsArray ||
+						field.BoilerField.IsRelation && !strings.HasSuffix(field.BoilerField.Name, "ID") {
+						continue
 					}
-
-					// if batchUpdate {
-					// 	w.l("input " + modelPluralName + "UpdateInput {")
-					// 	w.tl(strcase.ToLowerCamel(modelPluralName) + ": [" + model.Name + "UpdateInput!]!")
-					// 	w.l("}")
-					// 	w.br()
-					// }
-
-					// type UserPayload {
-					// 	user: User!
-					// }
-					w.l("type " + model.Name + "Payload {")
-					w.tl(strcase.ToLowerCamel(model.Name) + ": " + model.Name + "!")
-					w.l("}")
-
-					w.br()
-
-					// TODO batch, delete input and payloads
-
-					// type UserDeletePayload {
-					// 	id: ID!
-					// }
-					w.l("type " + model.Name + "DeletePayload {")
-					w.tl("id: ID!")
-					w.l("}")
-
-					w.br()
-
-					// type UsersPayload {
-					// 	users: [User!]!
-					// }
-					if config.GenerateBatchCreate {
-						w.l("type " + modelPluralName + "Payload {")
-						w.tl(strcase.ToLowerCamel(modelPluralName) + ": [" + model.Name + "!]!")
-						w.l("}")
-
-						w.br()
-					}
-
-					// type UsersDeletePayload {
-					// 	ids: [ID!]!
-					// }
-					if config.GenerateBatchDelete {
-						w.l("type " + modelPluralName + "DeletePayload {")
-						w.tl("ids: [ID!]!")
-						w.l("}")
-
-						w.br()
-					}
-					// type UsersUpdatePayload {
-					// 	ok: Boolean!
-					// }
-					if config.GenerateBatchUpdate {
-						w.l("type " + modelPluralName + "UpdatePayload {")
-						w.tl("ok: Boolean!")
-						w.l("}")
-
-						w.br()
-					}
+					directives := getDirectivesAsString(field.InputDirectives)
+					fullType := getFinalFullType(field, ParentTypeCreate)
+					w.tl(field.Name + ": " + fullType + directives)
 				}
+				w.l("}")
+
+				w.br()
+
+				// input UserUpdateInput {
+				// 	firstName: String!
+				// 	lastName: String
+				//	organizationId: ID!
+				// }
+				w.l("input " + model.Name + "UpdateInput {")
+
+				for _, field := range enhanceFields(hooks, model, filteredFields, ParentTypeUpdate) {
+					if field.SkipInput || field.SkipUpdate {
+						continue
+					}
+					// id is not required in create and will be specified in update resolver
+					if field.Name == "id" || field.Name == "createdAt" || field.Name == "updatedAt" || field.Name == "deletedAt" {
+						continue
+					}
+					// not possible yet in input
+					// TODO: make this possible for one-to-one structs?
+					// only for foreign keys inside model itself
+					if field.BoilerField.IsRelation && field.BoilerField.IsArray ||
+						field.BoilerField.IsRelation && !strings.HasSuffix(field.BoilerField.Name, "ID") {
+						continue
+					}
+					directives := getDirectivesAsString(field.InputDirectives)
+					w.tl(field.Name + ": " + getFinalFullType(field, ParentTypeUpdate) + directives)
+				}
+				w.l("}")
+
+				w.br()
+
+				w.l("input " + modelPluralName + "CreateInput {")
+
+				w.tl(strcase.ToLowerCamel(modelPluralName) + ": [" + model.Name + "CreateInput!]!")
+				w.l("}")
+
+				w.br()
+
+				// if batchUpdate {
+				// 	w.l("input " + modelPluralName + "UpdateInput {")
+				// 	w.tl(strcase.ToLowerCamel(modelPluralName) + ": [" + model.Name + "UpdateInput!]!")
+				// 	w.l("}")
+				// 	w.br()
+				// }
+
+				// type UserPayload {
+				// 	user: User!
+				// }
+				w.l("type " + model.Name + "Payload {")
+				w.tl(strcase.ToLowerCamel(model.Name) + ": " + model.Name + "!")
+				w.l("}")
+
+				w.br()
+
+				// TODO batch, delete input and payloads
+
+				// type UserDeletePayload {
+				// 	id: ID!
+				// }
+				w.l("type " + model.Name + "DeletePayload {")
+				w.tl("id: ID!")
+				w.l("}")
+
+				w.br()
+
+				// type UsersPayload {
+				// 	users: [User!]!
+				// }
+				w.l("type " + modelPluralName + "Payload {")
+				w.tl(strcase.ToLowerCamel(modelPluralName) + ": [" + model.Name + "!]!")
+				w.l("}")
+
+				w.br()
+
+				// type UsersDeletePayload {
+				// 	ids: [ID!]!
+				// }
+				w.l("type " + modelPluralName + "DeletePayload {")
+				w.tl("ids: [ID!]!")
+				w.l("}")
+
+				w.br()
+				// type UsersUpdatePayload {
+				// 	ok: Boolean!
+				// }
+				w.l("type " + modelPluralName + "UpdatePayload {")
+				w.tl("ok: Boolean!")
+				w.l("}")
+
+				w.br()
+
 			}
 			// Append to array
 			mod := SchemaArr{
-				Name: getFirstWord(grp[0].Name),
+				Name: internal.GetFirstWord(grp[0].Name),
 				Data: w.s.String(),
 			}
 			d = append(d, mod)
@@ -616,9 +579,9 @@ func SchemaGet(
 	return d
 }
 
-func enhanceFields(config SchemaConfig, model *SchemaModel, fields []*SchemaField, parentType ParentType) []*SchemaField {
-	if config.HookChangeFields != nil {
-		return config.HookChangeFields(model, fields, parentType)
+func enhanceFields(hooks *HooksConfig, model *SchemaModel, fields []*SchemaField, parentType ParentType) []*SchemaField {
+	if hooks.HookChangeFields != nil {
+		return hooks.HookChangeFields(model, fields, parentType)
 	}
 	return fields
 }
@@ -648,37 +611,37 @@ func getFullType(fieldType string, isArray bool, isRequired bool) string {
 	return gType
 }
 
-func boilerModelsToModels(boilerModels []*utils.BoilerModel, schemaIDColumns *[]SchemaCols) []*SchemaModel {
+func boilerModelsToModels(boilerModels []*utils.BoilerModel, foreignIDs *[]con.ForeignIDColumn) []*SchemaModel {
 	a := make([]*SchemaModel, len(boilerModels))
 	for i, boilerModel := range boilerModels {
 		a[i] = &SchemaModel{
 			Name:   boilerModel.Name,
-			Fields: boilerFieldsToFields(boilerModel.Fields, schemaIDColumns),
+			Fields: boilerFieldsToFields(boilerModel.Fields, foreignIDs),
 		}
 	}
 	return a
 }
 
 // executeHooksOnModels removes models and fields which the user hooked in into + it can change values
-func executeHooksOnModels(models []*SchemaModel, config SchemaConfig) []*SchemaModel {
+func executeHooksOnModels(models []*SchemaModel, hooks *HooksConfig) []*SchemaModel {
 	var a []*SchemaModel
 	for _, m := range models {
-		if config.HookShouldAddModel != nil && !config.HookShouldAddModel(*m) {
+		if hooks.HookShouldAddModel != nil && !hooks.HookShouldAddModel(*m) {
 			continue
 		}
 		var af []*SchemaField
 		for _, f := range m.Fields {
-			if config.HookShouldAddField != nil && !config.HookShouldAddField(*m, *f) {
+			if hooks.HookShouldAddField != nil && !hooks.HookShouldAddField(*m, *f) {
 				continue
 			}
-			if config.HookChangeField != nil {
-				config.HookChangeField(m, f)
+			if hooks.HookChangeField != nil {
+				hooks.HookChangeField(m, f)
 			}
 			af = append(af, f)
 		}
 		m.Fields = af
-		if config.HookChangeModel != nil {
-			config.HookChangeModel(m)
+		if hooks.HookChangeModel != nil {
+			hooks.HookChangeModel(m)
 		}
 
 		a = append(a, m)
@@ -687,10 +650,10 @@ func executeHooksOnModels(models []*SchemaModel, config SchemaConfig) []*SchemaM
 	return a
 }
 
-func boilerFieldsToFields(boilerFields []*utils.BoilerField, schemaIDColumns *[]SchemaCols) []*SchemaField {
+func boilerFieldsToFields(boilerFields []*utils.BoilerField, foreignIDs *[]con.ForeignIDColumn) []*SchemaField {
 	fields := make([]*SchemaField, len(boilerFields))
 	for i, boilerField := range boilerFields {
-		fields[i] = boilerFieldToField(boilerField, schemaIDColumns)
+		fields[i] = boilerFieldToField(boilerField, foreignIDs)
 	}
 	return fields
 }
@@ -760,8 +723,8 @@ func getFieldType(schemaField *SchemaField, parentType ParentType) string {
 	}
 }
 
-func boilerFieldToField(boilerField *utils.BoilerField, schemaIDColumns *[]SchemaCols) *SchemaField {
-	t := toGraphQLType(boilerField, schemaIDColumns)
+func boilerFieldToField(boilerField *utils.BoilerField, foreignIDs *[]con.ForeignIDColumn) *SchemaField {
+	t := toGraphQLType(boilerField, foreignIDs)
 	return NewSchemaField(toGraphQLName(boilerField.Name), t, boilerField)
 }
 
@@ -785,14 +748,14 @@ func toGraphQLName(fieldName string) string {
 	return strcase.ToLowerCamel(graphqlName)
 }
 
-func toGraphQLType(boilerField *utils.BoilerField, schemaIDColumns *[]SchemaCols) string {
+func toGraphQLType(boilerField *utils.BoilerField, foreignIDs *[]con.ForeignIDColumn) string {
 	lowerFieldName := strings.ToLower(boilerField.Name)
 	lowerBoilerType := strings.ToLower(boilerField.Type)
 
 	isCustomId := false
 
-	if schemaIDColumns != nil {
-		for _, s := range *schemaIDColumns {
+	if foreignIDs != nil {
+		for _, s := range *foreignIDs {
 			if strings.EqualFold(s.Column, boilerField.Name) {
 				isCustomId = true
 			}

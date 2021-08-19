@@ -2,12 +2,19 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 )
+
+func init() { //nolint:gochecknoinits
+	fmt.Println("______               _    _        _    _            _ _   _\n|  ____|             | |  (_)      | |  | |          | | | | |\n| |__ _ __ __ _ _ __ | | ___  ___  | |__| | ___  __ _| | |_| |__\n|  __| '__/ _` | '_ \\| |/ / |/ _ \\ |  __  |/ _ \\/ _` | | __| '_ \\\n| |  | | | (_| | | | |   <| |  __/ | |  | |  __/ (_| | | |_| | | |\n|_|  |_|  \\__,_|_| |_|_|\\_\\_|\\___| |_|  |_|\\___|\\__,_|_|\\__|_| |_|") //nolint:lll
+	fmt.Println("")
+	fmt.Println("Maddox - a transparent ORM.")
+	fmt.Println("")
+}
 
 // Execute executes the root command.
 func Execute() {
@@ -20,9 +27,10 @@ func Execute() {
 	app.Version = Version
 	app.Before = func(context *cli.Context) error {
 		if context.Bool("verbose") {
-			log.SetFlags(0)
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+			log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		} else {
-			log.SetOutput(ioutil.Discard)
+			zerolog.SetGlobalLevel(zerolog.Disabled)
 		}
 		return nil
 	}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	gqlcon "github.com/99designs/gqlgen/codegen/config"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -28,21 +29,22 @@ type ResolverConfig struct {
 }
 
 type FederationConfig struct {
-	DirName       string           `yaml:"dirname"`
-	Package       string           `yaml:"package,omitempty"`
-	CurrentSchema string           `yaml:"currentSchema,omitempty"`
-	ForeignIDs    ForeignIDColumns `yaml:"foreignIds,omitempty"`
+	DirName       string             `yaml:"dirname"`
+	Package       string             `yaml:"package,omitempty"`
+	CurrentSchema string             `yaml:"currentSchema,omitempty"`
+	ForeignIDs    *[]ForeignIDColumn `yaml:"foreignIds,omitempty"`
 }
 
-type ForeignIDColumns struct {
+type ForeignIDColumn struct {
 	Column string
 	Table  string
 }
 
 type SchemaConfig struct {
-	DirName    string   `yaml:"dirname"`
-	Package    string   `yaml:"package,omitempty"`
-	Directives []string `yaml:"directives,omitempty"`
+	DirName         string   `yaml:"dirname"`
+	Package         string   `yaml:"package,omitempty"`
+	Directives      []string `yaml:"directives,omitempty"`
+	SkipInputFields []string `yaml:"skipinputfields,omitempty"`
 }
 
 type ModelConfig struct {
@@ -130,6 +132,40 @@ func LoadConfigFromDefaultLocations() (*Config, error) {
 		return nil, errors.Wrap(err, "unable to enter config dir")
 	}
 	return LoadConfig(cfgFile)
+}
+
+// GenerateGqlgenConfig
+func LoadGqlgenConfig(cfg *Config) *gqlcon.Config {
+	var gql *gqlcon.Config
+
+	gql.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName}
+	gql.Exec.Filename = cfg.Graph.DirName
+	gql.Exec.Package = cfg.Graph.Package
+	gql.Model.Filename = cfg.Model.DirName
+	gql.Model.Package = cfg.Model.Package
+	gql.Resolver.Filename = cfg.Resolver.DirName
+	gql.Models = gqlcon.TypeMap{
+		"ConnectionBackwardPagination": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		},
+		"ConnectionForwardPagination": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		},
+		"ConnectionPagination": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		},
+		"SortDirection": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		},
+	}
+
+	if cfg.Federation.DirName != "" {
+		gql.AutoBind = gqlcon.StringList{cfg.Federation.DirName}
+		gql.Federation.Filename = cfg.Federation.DirName
+		gql.Federation.Package = cfg.Federation.Package
+	}
+
+	return gql
 }
 
 // findCfg searches for the config file in this directory and all parents up the tree
