@@ -163,9 +163,9 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 	// }
 
 	filesToGenerate := []string{
-		"base.go",
+		// "base.go",
 		// "lib.go",
-		// "common_filter.go",
+		"common_filter.go",
 		// "preload.go",
 	}
 
