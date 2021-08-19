@@ -62,7 +62,6 @@ var (
 
 			// Generate the gqlgen config
 			gqlcfg, err = internal.LoadGqlgenConfig(cfg)
-
 			if err != nil {
 				fmt.Println("error while trying to generate the config")
 				fmt.Fprintln(os.Stderr, err.Error())
