@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
 	"sort"
 	"strings"
 
@@ -25,7 +24,6 @@ type SchemaArr struct {
 }
 
 type HooksConfig struct {
-	cfg                *internal.Config
 	HookShouldAddModel func(model SchemaModel) bool
 	HookShouldAddField func(model SchemaModel, field SchemaField) bool
 	HookChangeField    func(model *SchemaModel, field *SchemaField)
@@ -804,68 +802,6 @@ func fieldsWithout(fields []*SchemaField, skipFieldNames []string) []*SchemaFiel
 	return filteredFields
 }
 
-func mergeContentInFile(content, outputFile string) error {
-	baseFile := filenameWithoutExtension(outputFile) +
-		"-empty" +
-		getFilenameExtension(outputFile)
-
-	newOutputFile := filenameWithoutExtension(outputFile) +
-		"-new" +
-		getFilenameExtension(outputFile)
-
-	// remove previous files if exist
-	_ = os.Remove(baseFile)
-	_ = os.Remove(newOutputFile)
-
-	if err := writeContentToFile(content, newOutputFile); err != nil {
-		return fmt.Errorf("could not write schema to disk: %v", err)
-	}
-	//if err := formatFile(outputFile); err != nil {
-	//	return fmt.Errorf("could not format with prettier %v", err)
-	//}
-	//if err := formatFile(newOutputFile); err != nil {
-	//	return fmt.Errorf("could not format with prettier%v", err)
-	//}
-
-	// Three way merging done based on this answer
-	// https://stackoverflow.com/a/9123563/2508481
-
-	// Empty file as base per the stackoverflow answer
-	name := "touch"
-	args := []string{baseFile}
-	out, err := exec.Command(name, args...).Output()
-	if err != nil {
-		log.Err(err).Str("name", name).Str("args", strings.Join(args, " ")).Msg("merging failed")
-		return fmt.Errorf("merging failed %v: %v", err, out)
-	}
-
-	// Let's do the merge
-	name = "git"
-	args = []string{"merge-file", outputFile, baseFile, newOutputFile}
-	out, err = exec.Command(name, args...).Output()
-	if err != nil {
-		log.Err(err).Str("name", name).Str("args", strings.Join(args, " ")).Msg("executing command failed")
-
-		// remove base file
-		_ = os.Remove(baseFile)
-		return fmt.Errorf("merging failed or had conflicts %v: %v", err, out)
-	}
-	log.Info().Msg("merging done without conflicts")
-
-	// remove files
-	_ = os.Remove(baseFile)
-	_ = os.Remove(newOutputFile)
-	return nil
-}
-
-func getFilenameExtension(fn string) string {
-	return path.Ext(fn)
-}
-
-func filenameWithoutExtension(fn string) string {
-	return strings.TrimSuffix(fn, path.Ext(fn))
-}
-
 func formatFile(filename string) error {
 	name := "prettier"
 	args := []string{filename, "--write"}
@@ -894,6 +830,7 @@ func writeContentToFile(content string, filename string) error {
 		}
 	}()
 
+	fmt.Println("PRINTING")
 	if _, err := file.WriteString(content); err != nil {
 		return fmt.Errorf("could not write content to file %v: %v", filename, err)
 	}
