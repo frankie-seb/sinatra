@@ -55,13 +55,20 @@ var (
 			// Generate the schema
 			h := &schema.HooksConfig{}
 			if err := schema.SchemaWrite(cfg, h); err != nil {
-				fmt.Println("error while trying to generate schema.graphql")
+				fmt.Println("error while trying to generate schema")
 				fmt.Fprintln(os.Stderr, err.Error())
 				os.Exit(3)
 			}
 
 			// Generate the gqlgen config
-			gqlcfg = config.LoadGqlgenConfig(cfg)
+			gqlcfg, err = config.LoadGqlgenConfig(cfg)
+
+			if err != nil {
+				fmt.Println("error while trying to generate the config")
+				fmt.Fprintln(os.Stderr, err.Error())
+				os.Exit(3)
+			}
+
 			// Run generator
 			if err = api.Generate(gqlcfg,
 				api.AddPlugin(helpers.NewHelperPlugin(
