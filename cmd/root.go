@@ -32,6 +32,7 @@ func Execute() {
 			log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		} else {
 			zerolog.SetGlobalLevel(zerolog.Disabled)
+			os.Stdout = nil
 		}
 		return nil
 	}
