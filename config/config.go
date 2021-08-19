@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -156,11 +155,11 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 	}
 
 	config.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName + "/*.graphql"}
-	config.Exec.Filename = cfg.Graph.DirName
+	config.Exec.Filename = cfg.Graph.DirName + "/exec.go"
 	config.Exec.Package = cfg.Graph.Package
-	config.Model.Filename = cfg.Model.DirName
+	config.Model.Filename = cfg.Model.DirName + "models.go"
 	config.Model.Package = cfg.Model.Package
-	config.Resolver.Filename = cfg.Resolver.DirName
+	config.Resolver.Filename = cfg.Resolver.DirName + "/resolver.go"
 	config.Models = gqlcon.TypeMap{
 		"ConnectionBackwardPagination": gqlcon.TypeMapEntry{
 			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
@@ -243,8 +242,6 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 
 		config.Sources = append(config.Sources, &ast.Source{Name: filename, Input: string(schemaRaw)})
 	}
-
-	fmt.Printf("***** %+v \n", config)
 
 	return config, nil
 }
