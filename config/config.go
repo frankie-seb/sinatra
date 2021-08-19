@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -137,6 +138,8 @@ func LoadConfigFromDefaultLocations() (*Config, error) {
 // GenerateGqlgenConfig
 func LoadGqlgenConfig(cfg *Config) *gqlcon.Config {
 	var gql *gqlcon.Config
+
+	fmt.Println("*****", cfg)
 
 	gql.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName}
 	gql.Exec.Filename = cfg.Graph.DirName
