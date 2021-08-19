@@ -185,7 +185,7 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 
 			// override type struct with qqlgen code
 			typ = binder.CopyModifiersFromAst(field.Type, typ)
-			fmt.Println("***** typ", typ)
+			fmt.Println("***** typ", typ, field.Name)
 			if isStruct(typ) && (fieldDef.Kind == ast.Object || fieldDef.Kind == ast.InputObject) {
 				typ = types.NewPointer(typ)
 			}
