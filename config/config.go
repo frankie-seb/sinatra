@@ -34,8 +34,8 @@ type ResolverConfig struct {
 type FederationConfig struct {
 	DirName       string             `yaml:"dirname"`
 	Package       string             `yaml:"package,omitempty"`
-	CurrentSchema string             `yaml:"currentSchema,omitempty"`
-	ForeignIDs    *[]ForeignIDColumn `yaml:"foreignIds,omitempty"`
+	CurrentSchema string             `yaml:"schema,omitempty"`
+	ForeignIDs    *[]ForeignIDColumn `yaml:"foreignids,omitempty"`
 }
 
 type ForeignIDColumn struct {
