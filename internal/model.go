@@ -354,6 +354,8 @@ func getAstFieldType(binder *config.Binder, schema *ast.Schema, cfg *config.Conf
 	var typ types.Type
 	var err error
 
+	fmt.Println("FIELD:", field.Name, field.Type)
+
 	fieldDef := schema.Types[field.Type.Name()]
 	if cfg.Models.UserDefined(field.Type.Name()) {
 		typ, err = binder.FindTypeFromName(cfg.Models[field.Type.Name()].Model[0])
