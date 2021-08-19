@@ -4,9 +4,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	gqlcon "github.com/99designs/gqlgen/codegen/config"
 	"github.com/pkg/errors"
+	"github.com/vektah/gqlparser/v2/ast"
 	"gopkg.in/yaml.v2"
 )
 
@@ -86,6 +89,13 @@ type Config struct {
 	Database   DatabaseConfig   `yaml:"database,omitempty"`
 }
 
+var path2regex = strings.NewReplacer(
+	`.`, `\.`,
+	`*`, `.+`,
+	`\`, `[\\/]`,
+	`/`, `[\\/]`,
+)
+
 // DefaultConfig creates a copy of the default config
 func DefaultConfig() *Config {
 	return &Config{
@@ -135,44 +145,105 @@ func LoadConfigFromDefaultLocations() (*Config, error) {
 }
 
 // GenerateGqlgenConfig
-func LoadGqlgenConfig(cfg *Config) *gqlcon.Config {
+func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
+	config := gqlcon.DefaultConfig()
 
-	gql := &gqlcon.Config{
-		SchemaFilename: gqlcon.StringList{cfg.Schema.DirName},
-		Exec: gqlcon.PackageConfig{
-			Filename: cfg.Graph.DirName,
-			Package:  cfg.Graph.Package,
+	defaultDirectives := map[string]gqlcon.DirectiveConfig{
+		"skip":       {SkipRuntime: true},
+		"include":    {SkipRuntime: true},
+		"deprecated": {SkipRuntime: true},
+	}
+
+	preGlobbing := config.SchemaFilename
+
+	for key, value := range defaultDirectives {
+		if _, defined := config.Directives[key]; !defined {
+			config.Directives[key] = value
+		}
+	}
+
+	config.SchemaFilename = gqlcon.StringList{}
+	for _, f := range preGlobbing {
+		var matches []string
+		var err error
+
+		// for ** we want to override default globbing patterns and walk all
+		// subdirectories to match schema files.
+		if strings.Contains(f, "**") {
+			pathParts := strings.SplitN(f, "**", 2)
+			rest := strings.TrimPrefix(strings.TrimPrefix(pathParts[1], `\`), `/`)
+			// turn the rest of the glob into a regex, anchored only at the end because ** allows
+			// for any number of dirs in between and walk will let us match against the full path name
+			globRe := regexp.MustCompile(path2regex.Replace(rest) + `$`)
+
+			if err := filepath.Walk(pathParts[0], func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+
+				if globRe.MatchString(strings.TrimPrefix(path, pathParts[0])) {
+					matches = append(matches, path)
+				}
+
+				return nil
+			}); err != nil {
+				return nil, errors.Wrapf(err, "failed to walk schema at root %s", pathParts[0])
+			}
+		} else {
+			matches, err = filepath.Glob(f)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to glob schema filename %s", f)
+			}
+		}
+
+		for _, m := range matches {
+			if config.SchemaFilename.Has(m) {
+				continue
+			}
+			config.SchemaFilename = append(config.SchemaFilename, m)
+		}
+	}
+
+	for _, filename := range config.SchemaFilename {
+		filename = filepath.ToSlash(filename)
+		var err error
+		var schemaRaw []byte
+		schemaRaw, err = ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to open schema")
+		}
+
+		config.Sources = append(config.Sources, &ast.Source{Name: filename, Input: string(schemaRaw)})
+	}
+
+	config.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName}
+	config.Exec.Filename = cfg.Graph.DirName
+	config.Exec.Package = cfg.Graph.Package
+	config.Model.Filename = cfg.Model.DirName
+	config.Model.Package = cfg.Model.Package
+	config.Resolver.Filename = cfg.Resolver.DirName
+	config.Models = gqlcon.TypeMap{
+		"ConnectionBackwardPagination": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
 		},
-		Model: gqlcon.PackageConfig{
-			Filename: cfg.Model.DirName,
-			Package:  cfg.Model.Package,
+		"ConnectionForwardPagination": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
 		},
-		Resolver: gqlcon.ResolverConfig{
-			Filename: cfg.Resolver.DirName,
+		"ConnectionPagination": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
 		},
-		Models: gqlcon.TypeMap{
-			"ConnectionBackwardPagination": gqlcon.TypeMapEntry{
-				Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
-			},
-			"ConnectionForwardPagination": gqlcon.TypeMapEntry{
-				Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
-			},
-			"ConnectionPagination": gqlcon.TypeMapEntry{
-				Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
-			},
-			"SortDirection": gqlcon.TypeMapEntry{
-				Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
-			},
+		"SortDirection": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
 		},
 	}
 
 	if cfg.Federation.DirName != "" {
-		gql.AutoBind = gqlcon.StringList{cfg.Federation.DirName}
-		gql.Federation.Filename = cfg.Federation.DirName
-		gql.Federation.Package = cfg.Federation.Package
+		config.AutoBind = gqlcon.StringList{cfg.Federation.DirName}
+		config.Federation.Filename = cfg.Federation.DirName
+		config.Federation.Package = cfg.Federation.Package
 	}
 
-	return gql
+	return config, nil
 }
 
 // findCfg searches for the config file in this directory and all parents up the tree
