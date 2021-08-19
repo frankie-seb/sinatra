@@ -154,6 +154,33 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 		"deprecated": {SkipRuntime: true},
 	}
 
+	config.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName + "/*.graphql"}
+	config.Exec.Filename = cfg.Graph.DirName
+	config.Exec.Package = cfg.Graph.Package
+	config.Model.Filename = cfg.Model.DirName
+	config.Model.Package = cfg.Model.Package
+	config.Resolver.Filename = cfg.Resolver.DirName
+	config.Models = gqlcon.TypeMap{
+		"ConnectionBackwardPagination": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		},
+		"ConnectionForwardPagination": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		},
+		"ConnectionPagination": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		},
+		"SortDirection": gqlcon.TypeMapEntry{
+			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
+		},
+	}
+
+	if cfg.Federation.DirName != "" {
+		config.AutoBind = gqlcon.StringList{cfg.Federation.DirName}
+		config.Federation.Filename = cfg.Federation.DirName
+		config.Federation.Package = cfg.Federation.Package
+	}
+
 	preGlobbing := config.SchemaFilename
 
 	for key, value := range defaultDirectives {
@@ -214,33 +241,6 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 		}
 
 		config.Sources = append(config.Sources, &ast.Source{Name: filename, Input: string(schemaRaw)})
-	}
-
-	config.SchemaFilename = gqlcon.StringList{cfg.Schema.DirName}
-	config.Exec.Filename = cfg.Graph.DirName
-	config.Exec.Package = cfg.Graph.Package
-	config.Model.Filename = cfg.Model.DirName
-	config.Model.Package = cfg.Model.Package
-	config.Resolver.Filename = cfg.Resolver.DirName
-	config.Models = gqlcon.TypeMap{
-		"ConnectionBackwardPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
-		},
-		"ConnectionForwardPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
-		},
-		"ConnectionPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
-		},
-		"SortDirection": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/be-base/helpers.ConnectionBackwardPagination"},
-		},
-	}
-
-	if cfg.Federation.DirName != "" {
-		config.AutoBind = gqlcon.StringList{cfg.Federation.DirName}
-		config.Federation.Filename = cfg.Federation.DirName
-		config.Federation.Package = cfg.Federation.Package
 	}
 
 	return config, nil
