@@ -153,7 +153,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 	})
 
 	// Run the resolver write process
-	ch := make(chan error, len(rMod))
+	ch := make(chan error)
 
 	for _, v := range rMod {
 		go func(v []*internal.Model) {
@@ -210,8 +210,6 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 			ch <- nil
 		}(v)
 	}
-
-	close(ch)
 
 	if err := <-ch; err != nil {
 		return err
