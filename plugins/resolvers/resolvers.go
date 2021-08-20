@@ -152,54 +152,71 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 		ImportPath: path.Join(m.rootImportPath, m.cfg.Helper.DirName),
 	})
 
-	// Model Resolver
+	// Run the resolver write process
+	ch := make(chan error, len(rMod))
+
 	for _, v := range rMod {
-		file.Resolvers = []*Resolver{}
+		go func(v []*internal.Model) {
+			file.Resolvers = []*Resolver{}
 
-		for _, o := range data.Objects {
-			if o.HasResolvers() {
-				file.Objects = append(file.Objects, o)
-			}
-			for _, f := range o.Fields {
-				if !f.IsResolver {
-					continue
+			for _, o := range data.Objects {
+				if o.HasResolvers() {
+					file.Objects = append(file.Objects, o)
 				}
-				n := f.Name
-
-				replace := map[string]string{
-					"create": "",
-					"update": "",
-					"delete": "",
-				}
-
-				for s, r := range replace {
-					n = strings.Replace(n, s, r, -1)
-				}
-
-				if strings.EqualFold(internal.GetFirstWord(v[0].Name), internal.GetFirstWord(n)) || strings.EqualFold(utils.Plural(internal.GetFirstWord(v[0].Name)), internal.GetFirstWord(n)) {
-					resolver := &Resolver{
-						Object:         o,
-						Field:          f,
-						Implementation: `panic("not implemented yet")`,
+				for _, f := range o.Fields {
+					if !f.IsResolver {
+						continue
 					}
-					enhanceResolver(resolver, models)
-					if resolver.Model.BoilerModel != nil && resolver.Model.BoilerModel.Name != "" {
-						file.Resolvers = append(file.Resolvers, resolver)
+					n := f.Name
+
+					replace := map[string]string{
+						"create": "",
+						"update": "",
+						"delete": "",
+					}
+
+					for s, r := range replace {
+						n = strings.Replace(n, s, r, -1)
+					}
+
+					if strings.EqualFold(internal.GetFirstWord(v[0].Name), internal.GetFirstWord(n)) || strings.EqualFold(utils.Plural(internal.GetFirstWord(v[0].Name)), internal.GetFirstWord(n)) {
+						resolver := &Resolver{
+							Object:         o,
+							Field:          f,
+							Implementation: `panic("not implemented yet")`,
+						}
+						enhanceResolver(resolver, models)
+						if resolver.Model.BoilerModel != nil && resolver.Model.BoilerModel.Name != "" {
+							file.Resolvers = append(file.Resolvers, resolver)
+						}
 					}
 				}
+
 			}
 
-		}
+			resolverBuild.Models = v
 
-		resolverBuild.Models = v
+			if err := utils.WriteTemplateFile(dir+"/resolvers/"+strings.ToLower(internal.GetFirstWord(v[0].Name))+"_gen.go", utils.Options{
+				Template:             templateContent,
+				PackageName:          data.Config.Resolver.Package,
+				Data:                 resolverBuild,
+				UserDefinedFunctions: extendedFunctions,
+			}); err != nil {
+				log.Err(err).Msg("Could not write resolver")
+				ch <- err
+				return
+			}
 
-		utils.WriteTemplateFile(dir+"/resolvers/"+strings.ToLower(internal.GetFirstWord(v[0].Name))+"_gen.go", utils.Options{
-			Template:             templateContent,
-			PackageName:          data.Config.Resolver.Package,
-			Data:                 resolverBuild,
-			UserDefinedFunctions: extendedFunctions,
-		})
+			ch <- nil
+		}(v)
 	}
+
+	close(ch)
+
+	if err := <-ch; err != nil {
+		return err
+	}
+
 	// Replace text in resolvers
 	err = filepath.Walk(dir+"/resolvers", ReplaceGeneratedText)
 	if err != nil {
