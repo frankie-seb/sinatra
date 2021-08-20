@@ -118,8 +118,11 @@ func SchemaWrite(cfg *internal.Config, hooks *HooksConfig) error {
 				return
 			}
 			formatFile("schema/" + strings.ToLower(s.Name) + "_gen.graphql")
+			ch <- nil
 		}(s)
 	}
+
+	close(ch)
 
 	if err := <-ch; err != nil {
 		return err
