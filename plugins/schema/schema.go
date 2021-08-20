@@ -108,12 +108,21 @@ func SchemaWrite(cfg *internal.Config, hooks *HooksConfig) error {
 		hooks,
 	)
 
+	ch := make(chan error, len(schema))
+
 	for _, s := range schema {
-		if err := writeContentToFile(s.Data, "schema/"+strings.ToLower(s.Name)+"_gen.graphql"); err != nil {
-			log.Err(err).Msg("Could not write schema to disk")
-			return err
-		}
-		formatFile("schema/" + strings.ToLower(s.Name) + "_gen.graphql")
+		go func(s SchemaArr) {
+			if err := writeContentToFile(s.Data, "schema/"+strings.ToLower(s.Name)+"_gen.graphql"); err != nil {
+				log.Err(err).Msg("Could not write schema to disk")
+				ch <- err
+				return
+			}
+			formatFile("schema/" + strings.ToLower(s.Name) + "_gen.graphql")
+		}(s)
+	}
+
+	if err := <-ch; err != nil {
+		return err
 	}
 
 	return nil
