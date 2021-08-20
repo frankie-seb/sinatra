@@ -108,7 +108,7 @@ func SchemaWrite(cfg *internal.Config, hooks *HooksConfig) error {
 		hooks,
 	)
 
-	ch := make(chan error, len(schema))
+	ch := make(chan error)
 
 	for _, s := range schema {
 		go func(s SchemaArr) {
@@ -121,8 +121,6 @@ func SchemaWrite(cfg *internal.Config, hooks *HooksConfig) error {
 			ch <- nil
 		}(s)
 	}
-
-	close(ch)
 
 	if err := <-ch; err != nil {
 		return err
@@ -842,7 +840,6 @@ func writeContentToFile(content string, filename string) error {
 		}
 	}()
 
-	fmt.Println("PRINTING")
 	if _, err := file.WriteString(content); err != nil {
 		return fmt.Errorf("could not write content to file %v: %v", filename, err)
 	}
