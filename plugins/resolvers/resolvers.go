@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/frankie-seb/sinatra/internal"
-	"github.com/frankie-seb/sinatra/internal/utils"
 
 	"github.com/rs/zerolog/log"
 
@@ -23,7 +22,7 @@ import (
 func NewResolverPlugin(cfg *internal.Config) plugin.Plugin {
 	return &ResolverPlugin{
 		cfg:            cfg,
-		rootImportPath: utils.GetRootImportPath(),
+		rootImportPath: internal.GetRootImportPath(),
 	}
 }
 
@@ -32,7 +31,7 @@ type AuthorizationScope struct {
 	ImportAlias       string
 	ScopeResolverName string
 	BoilerColumnName  string
-	AddHook           func(model *utils.BoilerModel, resolver *Resolver, templateKey string) bool
+	AddHook           func(model *internal.BoilerModel, resolver *Resolver, templateKey string) bool
 }
 
 type ResolverPlugin struct {
@@ -50,7 +49,7 @@ func (m *ResolverPlugin) GenerateCode(data *codegen.Data) error {
 	if !data.Config.Resolver.IsDefined() {
 		return nil
 	}
-	boilerModels, _ := utils.GetBoilerModels(m.cfg.Model.DirName)
+	boilerModels, _ := internal.GetBoilerModels(m.cfg.Model.DirName)
 	models := internal.GetModelsWithInformation(m.cfg.Model.Package, nil, data.Config, boilerModels, nil, nil)
 	return m.generatePerSchema(data, models, boilerModels)
 }
@@ -73,7 +72,7 @@ func groupByBoilerModelName(list []*internal.Model) [][]*internal.Model {
 	return r
 }
 
-func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*internal.Model, _ []*utils.BoilerModel) error {
+func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*internal.Model, _ []*internal.BoilerModel) error {
 	file := File{}
 
 	file.Imports = append(file.Imports, internal.Import{
@@ -123,7 +122,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 		extendedFiles = append(extendedFiles, strings.ToLower(internal.GetFirstWord(v[0].Name))+"_gen.go")
 	}
 
-	extendedFunctions, err := utils.GetResolverFunctionNamesFromDir("resolvers", extendedFiles)
+	extendedFunctions, err := internal.GetResolverFunctionNamesFromDir("resolvers", extendedFiles)
 	if err != nil {
 		log.Err(err).Msg("could not parse user defined functions in resolver")
 	}
@@ -139,7 +138,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 	}
 
 	// Write Common Resolver
-	utils.WriteTemplateFile(dir+"/resolvers/resolver.go", utils.Options{
+	internal.WriteTemplateFile(dir+"/resolvers/resolver.go", internal.Options{
 		Template:             commonTemplateContent,
 		PackageName:          data.Config.Resolver.Package,
 		Data:                 resolverBuild,
@@ -179,7 +178,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 						n = strings.Replace(n, s, r, -1)
 					}
 
-					if strings.EqualFold(internal.GetFirstWord(v[0].Name), internal.GetFirstWord(n)) || strings.EqualFold(utils.Plural(internal.GetFirstWord(v[0].Name)), internal.GetFirstWord(n)) {
+					if strings.EqualFold(internal.GetFirstWord(v[0].Name), internal.GetFirstWord(n)) || strings.EqualFold(internal.Plural(internal.GetFirstWord(v[0].Name)), internal.GetFirstWord(n)) {
 						resolver := &Resolver{
 							Object:         o,
 							Field:          f,
@@ -196,7 +195,7 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 
 			resolverBuild.Models = v
 
-			if err := utils.WriteTemplateFile(dir+"/resolvers/"+strings.ToLower(internal.GetFirstWord(v[0].Name))+"_gen.go", utils.Options{
+			if err := internal.WriteTemplateFile(dir+"/resolvers/"+strings.ToLower(internal.GetFirstWord(v[0].Name))+"_gen.go", internal.Options{
 				Template:             templateContent,
 				PackageName:          data.Config.Resolver.Package,
 				Data:                 resolverBuild,
@@ -334,7 +333,7 @@ func enhanceResolver(r *Resolver, models []*internal.Model) { //nolint:gocyclo
 		r.IsBatchUpdate = containsPrefixAndPartAfterThatIsPlural(nameOfResolver, "Update")
 		r.IsBatchDelete = containsPrefixAndPartAfterThatIsPlural(nameOfResolver, "Delete")
 	case "Query":
-		isPlural := utils.IsPlural(nameOfResolver)
+		isPlural := internal.IsPlural(nameOfResolver)
 		if isPlural {
 			r.IsList = isPlural
 			r.IsListBackward = strings.Contains(r.Field.GoFieldName, "first int") &&
@@ -417,9 +416,9 @@ func getModelNames(v string, plural bool) (modelName, inputModelName string) {
 	}
 	var s string
 	if plural {
-		s = utils.Plural(v)
+		s = internal.Plural(v)
 	} else {
-		s = utils.Singular(v)
+		s = internal.Singular(v)
 	}
 
 	if isInputType {
@@ -431,12 +430,12 @@ func getModelNames(v string, plural bool) (modelName, inputModelName string) {
 
 func containsPrefixAndPartAfterThatIsSingle(v string, prefix string) bool {
 	partAfterThat := strings.TrimPrefix(v, prefix)
-	return strings.HasPrefix(v, prefix) && utils.IsSingular(partAfterThat)
+	return strings.HasPrefix(v, prefix) && internal.IsSingular(partAfterThat)
 }
 
 func containsPrefixAndPartAfterThatIsPlural(v string, prefix string) bool {
 	partAfterThat := strings.TrimPrefix(v, prefix)
-	return strings.HasPrefix(v, prefix) && utils.IsPlural(partAfterThat)
+	return strings.HasPrefix(v, prefix) && internal.IsPlural(partAfterThat)
 }
 
 func ReplaceGeneratedText(path string, fi os.FileInfo, err error) error {

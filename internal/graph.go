@@ -5,12 +5,11 @@ import (
 	"strings"
 
 	"github.com/99designs/gqlgen/codegen/config"
-	"github.com/frankie-seb/sinatra/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-func getModelsFromSchema(schema *ast.Schema, boilerModels []*utils.BoilerModel) (models []*Model) { //nolint:gocognit,gocyclo
+func getModelsFromSchema(schema *ast.Schema, boilerModels []*BoilerModel) (models []*Model) { //nolint:gocognit,gocyclo
 	for _, schemaType := range schema.Types {
 		// skip boiler plate from ggqlgen, we only want the models
 		if strings.HasPrefix(schemaType.Name, "_") {
@@ -32,7 +31,7 @@ func getModelsFromSchema(schema *ast.Schema, boilerModels []*utils.BoilerModel) 
 				}
 
 				// We will try to find a corresponding boiler struct
-				boilerModel := utils.FindBoilerModel(boilerModels, getBaseModelFromName(modelName))
+				boilerModel := FindBoilerModel(boilerModels, getBaseModelFromName(modelName))
 
 				isInput := doesEndWith(modelName, "Input")
 				isCreateInput := doesEndWith(modelName, "CreateInput")
@@ -72,7 +71,7 @@ func getModelsFromSchema(schema *ast.Schema, boilerModels []*utils.BoilerModel) 
 				m := &Model{
 					Name:          modelName,
 					Description:   schemaType.Description,
-					PluralName:    utils.Plural(modelName),
+					PluralName:    Plural(modelName),
 					BoilerModel:   boilerModel,
 					IsInput:       isInput,
 					IsFilter:      isFilter,
