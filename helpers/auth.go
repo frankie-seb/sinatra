@@ -1,4 +1,4 @@
-package base_helpers
+package helpers
 
 import (
 	"context"

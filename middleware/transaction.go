@@ -92,7 +92,7 @@ func TransactionHandler(db *sql.DB, paths []string) func(http.Handler) http.Hand
 						http.Error(w, "Malformed Content-Type header", http.StatusUnauthorized)
 					}
 				} else {
-					log.Println("commiting transaction")
+					log.Println("committing transaction")
 					tx.Commit()
 				}
 

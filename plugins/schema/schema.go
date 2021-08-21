@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/frankie-seb/sinatra/internal"
-	"github.com/frankie-seb/sinatra/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog/log"
 )
@@ -48,7 +47,7 @@ type SchemaField struct {
 	InputUpdateType      string
 	InputBatchUpdateType string
 	InputBatchCreateType string
-	BoilerField          *utils.BoilerField
+	BoilerField          *internal.BoilerField
 	SkipInput            bool
 	SkipWhere            bool
 	SkipSort             bool
@@ -60,7 +59,7 @@ type SchemaField struct {
 	Directives           []string
 }
 
-func NewSchemaField(name string, typ string, boilerField *utils.BoilerField) *SchemaField {
+func NewSchemaField(name string, typ string, boilerField *internal.BoilerField) *SchemaField {
 	return &SchemaField{
 		Name:                 name,
 		Type:                 typ,
@@ -165,7 +164,7 @@ func SchemaGet(
 	e := &SimpleWriter{}
 
 	// Parse models and their fields based on the sqlboiler model directory
-	boilerModels, boilerEnums := utils.GetBoilerModels(cfg.Model.DirName)
+	boilerModels, boilerEnums := internal.GetBoilerModels(cfg.Model.DirName)
 
 	models := executeHooksOnModels(boilerModelsToModels(boilerModels, cfg.Federation.ForeignIDs), hooks)
 
@@ -258,7 +257,7 @@ func SchemaGet(
 			w := &SimpleWriter{}
 			w.l("extend type Query {")
 			for _, model := range grp {
-				modelPluralName := utils.Plural(model.Name)
+				modelPluralName := internal.Plural(model.Name)
 
 				// single models
 				w.tl(strcase.ToLowerCamel(model.Name) + "(id: ID!): " + model.Name + "!" + joinedDirectives)
@@ -283,7 +282,7 @@ func SchemaGet(
 				w.l("extend type Mutation {")
 			}
 			for _, model := range grp {
-				modelPluralName := utils.Plural(model.Name)
+				modelPluralName := internal.Plural(model.Name)
 				// Generate mutation queries
 
 				// create single
@@ -452,7 +451,7 @@ func SchemaGet(
 				// Generate input and payloads for mutatations
 				filteredFields := fieldsWithout(model.Fields, cfg.Schema.SkipInputFields)
 
-				modelPluralName := utils.Plural(model.Name)
+				modelPluralName := internal.Plural(model.Name)
 				// input UserCreateInput {
 				// 	firstName: String!
 				// 	lastName: String
@@ -617,7 +616,7 @@ func getFullType(fieldType string, isArray bool, isRequired bool) string {
 	return gType
 }
 
-func boilerModelsToModels(boilerModels []*utils.BoilerModel, foreignIDs *[]internal.ForeignIDColumn) []*SchemaModel {
+func boilerModelsToModels(boilerModels []*internal.BoilerModel, foreignIDs *[]internal.ForeignIDColumn) []*SchemaModel {
 	a := make([]*SchemaModel, len(boilerModels))
 	for i, boilerModel := range boilerModels {
 		a[i] = &SchemaModel{
@@ -656,7 +655,7 @@ func executeHooksOnModels(models []*SchemaModel, hooks *HooksConfig) []*SchemaMo
 	return a
 }
 
-func boilerFieldsToFields(boilerFields []*utils.BoilerField, foreignIDs *[]internal.ForeignIDColumn) []*SchemaField {
+func boilerFieldsToFields(boilerFields []*internal.BoilerField, foreignIDs *[]internal.ForeignIDColumn) []*SchemaField {
 	fields := make([]*SchemaField, len(boilerFields))
 	for i, boilerField := range boilerFields {
 		fields[i] = boilerFieldToField(boilerField, foreignIDs)
@@ -729,7 +728,7 @@ func getFieldType(schemaField *SchemaField, parentType ParentType) string {
 	}
 }
 
-func boilerFieldToField(boilerField *utils.BoilerField, foreignIDs *[]internal.ForeignIDColumn) *SchemaField {
+func boilerFieldToField(boilerField *internal.BoilerField, foreignIDs *[]internal.ForeignIDColumn) *SchemaField {
 	t := toGraphQLType(boilerField, foreignIDs)
 	return NewSchemaField(toGraphQLName(boilerField.Name), t, boilerField)
 }
@@ -754,7 +753,7 @@ func toGraphQLName(fieldName string) string {
 	return strcase.ToLowerCamel(graphqlName)
 }
 
-func toGraphQLType(boilerField *utils.BoilerField, foreignIDs *[]internal.ForeignIDColumn) string {
+func toGraphQLType(boilerField *internal.BoilerField, foreignIDs *[]internal.ForeignIDColumn) string {
 	lowerFieldName := strings.ToLower(boilerField.Name)
 	lowerBoilerType := strings.ToLower(boilerField.Type)
 
@@ -805,7 +804,7 @@ func toGraphQLType(boilerField *utils.BoilerField, foreignIDs *[]internal.Foreig
 func fieldsWithout(fields []*SchemaField, skipFieldNames []string) []*SchemaField {
 	var filteredFields []*SchemaField
 	for _, field := range fields {
-		if !utils.SliceContains(skipFieldNames, field.Name) {
+		if !internal.SliceContains(skipFieldNames, field.Name) {
 			filteredFields = append(filteredFields, field)
 		}
 	}

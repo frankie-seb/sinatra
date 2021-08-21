@@ -1,4 +1,4 @@
-package base_helpers
+package helpers
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+// Export input from the current context
 func GetInputFromContext(ctx context.Context, key string) map[string]interface{} {
 	fieldContext := graphql.GetFieldContext(ctx)
 	variables := map[string]interface{}{}

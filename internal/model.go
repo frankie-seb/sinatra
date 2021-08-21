@@ -8,7 +8,6 @@ import (
 
 	"github.com/99designs/gqlgen/codegen/config"
 	gqlgenTemplates "github.com/99designs/gqlgen/codegen/templates"
-	"github.com/frankie-seb/sinatra/internal/utils"
 	"github.com/iancoleman/strcase"
 	"github.com/rs/zerolog/log"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -43,7 +42,7 @@ type JoinRels struct {
 type Model struct {
 	Name           string
 	PluralName     string
-	BoilerModel    *utils.BoilerModel
+	BoilerModel    *BoilerModel
 	PrimaryKeyType string
 	Fields         []*Field
 	IsNormal       bool
@@ -85,7 +84,7 @@ type Field struct {
 	IsRelation bool
 	IsObject   bool
 	// boiler relation stuff is inside this field
-	BoilerField utils.BoilerField
+	BoilerField BoilerField
 	// graphql relation ship can be found here
 	Relationship *Model
 	IsOr         bool
@@ -115,14 +114,14 @@ type Enum struct {
 	PluralName    string
 	Values        []*EnumValue
 	HasBoilerEnum bool
-	BoilerEnum    *utils.BoilerEnum
+	BoilerEnum    *BoilerEnum
 }
 
 type EnumValue struct {
 	Description     string
 	Name            string
 	NameLower       string
-	BoilerEnumValue *utils.BoilerEnumValue
+	BoilerEnumValue *BoilerEnumValue
 }
 
 type Import struct {
@@ -139,7 +138,7 @@ func GetModelsWithInformation(
 	modelPackage string,
 	enums []*Enum,
 	cfg *config.Config,
-	boilerModels []*utils.BoilerModel,
+	boilerModels []*BoilerModel,
 	ignoreTypePrefixes []string,
 	foreignIDs *[]ForeignIDColumn) []*Model {
 	// get models based on the schema and sqlboiler structs
@@ -192,7 +191,7 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 			// generate some booleans because these checks will be used a lot
 			isObject := fieldDef.Kind == ast.Object || fieldDef.Kind == ast.InputObject
 
-			shortType := utils.GetShortType(typ.String(), ignoreTypePrefixes)
+			shortType := GetShortType(typ.String(), ignoreTypePrefixes)
 
 			isPrimaryID := strings.EqualFold(name, "id")
 
@@ -236,7 +235,7 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 			if boilerField.Type == "" {
 				switch {
 				case m.IsPayload:
-				case utils.IsPlural(name):
+				case IsPlural(name):
 				case (m.IsFilter || m.IsWhere) && (strings.EqualFold(name, "and") ||
 					strings.EqualFold(name, "or") ||
 					strings.EqualFold(name, "search") ||
@@ -277,9 +276,9 @@ func enhanceModelsWithFields(enums []*Enum, schema *ast.Schema, cfg *config.Conf
 				IsObject:           isObject,
 				IsOr:               strings.EqualFold(name, "or"),
 				IsAnd:              strings.EqualFold(name, "and"),
-				IsPlural:           utils.IsPlural(name),
+				IsPlural:           IsPlural(name),
 				IsJSON:             strings.Contains(boilerField.Type, "JSON"),
-				PluralName:         utils.Plural(name),
+				PluralName:         Plural(name),
 				OriginalType:       typ,
 				Description:        field.Description,
 				Enum:               enum,
@@ -406,7 +405,7 @@ func isStruct(t types.Type) bool {
 	return is
 }
 
-func findBoilerFieldOrForeignKey(fields []*utils.BoilerField, golangGraphQLName string, isObject bool) utils.BoilerField {
+func findBoilerFieldOrForeignKey(fields []*BoilerField, golangGraphQLName string, isObject bool) BoilerField {
 	// get database friendly struct for this model
 	for _, field := range fields {
 		if isObject {
@@ -419,7 +418,7 @@ func findBoilerFieldOrForeignKey(fields []*utils.BoilerField, golangGraphQLName 
 			return *field
 		}
 	}
-	return utils.BoilerField{}
+	return BoilerField{}
 }
 
 func getConvertConfig(enums []*Enum, model *Model, field *Field) (fc FieldConfig) { //nolint:gocognit,gocyclo
@@ -541,7 +540,7 @@ var ignoreMatchTypes = []IgnoreTypeMatch{
 	},
 }
 
-func FindBoilerEnumValue(enum *utils.BoilerEnum, name string) *utils.BoilerEnumValue {
+func FindBoilerEnumValue(enum *BoilerEnum, name string) *BoilerEnumValue {
 	if enum != nil {
 		for _, v := range enum.Values {
 			if strings.EqualFold(strings.TrimPrefix(v.Name, enum.Name), name) {
@@ -558,7 +557,7 @@ func foreignKeyToRel(v string) string {
 	return strings.TrimSuffix(strcase.ToCamel(v), "ID")
 }
 
-func FindBoilerEnum(enums []*utils.BoilerEnum, graphType string) *utils.BoilerEnum {
+func FindBoilerEnum(enums []*BoilerEnum, graphType string) *BoilerEnum {
 	for _, enum := range enums {
 		if enum.Name == graphType {
 			return enum

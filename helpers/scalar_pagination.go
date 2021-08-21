@@ -1,4 +1,4 @@
-package base_helpers
+package helpers
 
 type ConnectionBackwardPagination struct {
 	Last   int     `json:"last"`
