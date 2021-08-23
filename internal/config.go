@@ -169,16 +169,16 @@ func LoadGqlgenConfig(cfg *Config) (*gqlcon.Config, error) {
 	config.Resolver.Filename = cfg.Resolver.DirName + "/resolver.go"
 	config.Models = gqlcon.TypeMap{
 		"ConnectionBackwardPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/sinatra/helpers.ConnectionBackwardPagination"},
+			Model: gqlcon.StringList{"github.com/frankie-seb/sinatra/helpers.ConnectionBackwardPagination"},
 		},
 		"ConnectionForwardPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/sinatra/helpers.ConnectionForwardPagination"},
+			Model: gqlcon.StringList{"github.com/frankie-seb/sinatra/helpers.ConnectionForwardPagination"},
 		},
 		"ConnectionPagination": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/sinatra/helpers.ConnectionPagination"},
+			Model: gqlcon.StringList{"github.com/frankie-seb/sinatra/helpers.ConnectionPagination"},
 		},
 		"SortDirection": gqlcon.TypeMapEntry{
-			Model: gqlcon.StringList{"github.com/FrankieHealth/sinatra/helpers.SortDirection"},
+			Model: gqlcon.StringList{"github.com/frankie-seb/sinatra/helpers.SortDirection"},
 		},
 	}
 
