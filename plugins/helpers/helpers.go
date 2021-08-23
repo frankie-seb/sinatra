@@ -138,38 +138,37 @@ func (m *HelperPlugin) MutateConfig(originalCfg *config.Config) error {
 	}
 
 	// Manage join relations subqueries
-	// for _, model := range models {
-	// 	var js []internal.JoinRels
-
-	// 	if model.IsWhere {
-	// 		for _, v := range m.Helpers.JoinRels {
-	// 			if v.To == model.BoilerModel.TableName {
-	// 				// Convert to Snake Case
-	// 				j := internal.JoinRels{
-	// 					From:    ToSnakeCase(v.From),
-	// 					To:      ToSnakeCase(v.To),
-	// 					Via:     v.Via,
-	// 					FromCol: v.FromCol,
-	// 					ToCol:   v.ToCol,
-	// 				}
-	// 				js = append(js, j)
-	// 			}
-	// 			// Do the opposite
-	// 			if v.From == model.BoilerModel.TableName {
-	// 				// Convert to Snake Case
-	// 				j := internal.JoinRels{
-	// 					From:    ToSnakeCase(v.To),
-	// 					To:      ToSnakeCase(v.From),
-	// 					Via:     v.Via,
-	// 					FromCol: v.ToCol,
-	// 					ToCol:   v.FromCol,
-	// 				}
-	// 				js = append(js, j)
-	// 			}
-	// 		}
-	// 		model.JoinArray = js
-	// 	}
-	// }
+	for _, model := range models {
+		var js []internal.JoinRelationship
+		if model.IsWhere {
+			for _, v := range *m.cfg.Federation.JoinRelationships {
+				if v.To == model.BoilerModel.TableName {
+					// Convert to Snake Case
+					j := internal.JoinRelationship{
+						From:       ToSnakeCase(v.From),
+						To:         ToSnakeCase(v.To),
+						Via:        v.Via,
+						FromColumn: v.FromColumn,
+						ToColumn:   v.ToColumn,
+					}
+					js = append(js, j)
+				}
+				// Do the opposite
+				if v.From == model.BoilerModel.TableName {
+					// Convert to Snake Case
+					j := internal.JoinRelationship{
+						From:       ToSnakeCase(v.To),
+						To:         ToSnakeCase(v.From),
+						Via:        v.Via,
+						FromColumn: v.ToColumn,
+						ToColumn:   v.FromColumn,
+					}
+					js = append(js, j)
+				}
+			}
+			model.JoinArray = js
+		}
+	}
 
 	filesToGenerate := []string{
 		"base.go",

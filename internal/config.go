@@ -32,13 +32,22 @@ type ResolverConfig struct {
 }
 
 type FederationConfig struct {
-	Activate   bool               `yaml:"activate,omitempty"`
-	ForeignIDs *[]ForeignIDColumn `yaml:"foreignids,omitempty"`
+	Activate          bool                `yaml:"activate,omitempty"`
+	ForeignIDs        *[]ForeignIDColumn  `yaml:"foreignids,omitempty"`
+	JoinRelationships *[]JoinRelationship `yaml:"joinrelationships,omitempty"`
 }
 
 type ForeignIDColumn struct {
-	Column string
-	Table  string
+	Column string `yaml:"column,omitempty"`
+	Table  string `yaml:"table,omitempty"`
+}
+
+type JoinRelationship struct {
+	From       string `yaml:"from,omitempty"`
+	To         string `yaml:"to,omitempty"`
+	Via        string `yaml:"via,omitempty"`
+	FromColumn string `yaml:"fromcolumn,omitempty"`
+	ToColumn   string `yaml:"tocolumn,omitempty"`
 }
 
 type SchemaConfig struct {

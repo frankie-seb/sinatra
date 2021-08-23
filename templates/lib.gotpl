@@ -241,8 +241,8 @@ import (
 
 				{{- range $value := .JoinArray }}
 					if len(subQueryMods) > 0 && parentTable == "{{$value.From}}" && foreignColumn == "" {
-						queryMods = appendJoinSubQuery(queryMods, subQuery.Query, "{{$value.To}}", "{{$value.Via}}", "{{$value.ToCol}}")
-						queryMods = append(queryMods, qm.Where(fmt.Sprintf("{{$value.From}}.id = {{$value.Via}}.{{$value.FromCol}})")))
+						queryMods = appendJoinSubQuery(queryMods, subQuery.Query, "{{$value.To}}", "{{$value.Via}}", "{{$value.ToColumn}}")
+						queryMods = append(queryMods, qm.Where(fmt.Sprintf("{{$value.From}}.id = {{$value.Via}}.{{$value.FromColumn}})")))
 					}
 				{{- end -}}
 			} else if len(subQueryMods) > 0 {

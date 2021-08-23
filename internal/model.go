@@ -31,14 +31,6 @@ type ColumnSetting struct {
 	IDAvailable           bool
 }
 
-type JoinRels struct {
-	From    string
-	To      string
-	Via     string
-	FromCol string
-	ToCol   string
-}
-
 type Model struct {
 	Name           string
 	PluralName     string
@@ -58,7 +50,7 @@ type Model struct {
 	IsFilter       bool
 	IsPreloadable  bool
 	PreloadArray   []Preload
-	JoinArray      []JoinRels
+	JoinArray      []JoinRelationship
 
 	HasPrimaryStringID bool
 	Description        string
