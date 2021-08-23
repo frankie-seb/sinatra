@@ -138,12 +138,14 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 	}
 
 	// Write Common Resolver
-	internal.WriteTemplateFile(dir+"/resolvers/resolver.go", internal.Options{
+	if err := internal.WriteTemplateFile(dir+"/resolvers/resolver.go", internal.Options{
 		Template:             commonTemplateContent,
 		PackageName:          data.Config.Resolver.Package,
 		Data:                 resolverBuild,
 		UserDefinedFunctions: extendedFunctions,
-	})
+	}); err != nil {
+		log.Err(err).Msg("Could not write resolver")
+	}
 
 	// Add in helper import
 	file.Imports = append(file.Imports, internal.Import{
@@ -152,66 +154,54 @@ func (m *ResolverPlugin) generatePerSchema(data *codegen.Data, models []*interna
 	})
 
 	// Run the resolver write process
-	ch := make(chan error)
-
 	for _, v := range rMod {
-		go func(v []*internal.Model) {
-			file.Resolvers = []*Resolver{}
+		file.Resolvers = []*Resolver{}
 
-			for _, o := range data.Objects {
-				if o.HasResolvers() {
-					file.Objects = append(file.Objects, o)
+		for _, o := range data.Objects {
+			if o.HasResolvers() {
+				file.Objects = append(file.Objects, o)
+			}
+			for _, f := range o.Fields {
+				if !f.IsResolver {
+					continue
 				}
-				for _, f := range o.Fields {
-					if !f.IsResolver {
-						continue
-					}
-					n := f.Name
+				n := f.Name
 
-					replace := map[string]string{
-						"create": "",
-						"update": "",
-						"delete": "",
-					}
-
-					for s, r := range replace {
-						n = strings.Replace(n, s, r, -1)
-					}
-
-					if strings.EqualFold(internal.GetFirstWord(v[0].Name), internal.GetFirstWord(n)) || strings.EqualFold(internal.Plural(internal.GetFirstWord(v[0].Name)), internal.GetFirstWord(n)) {
-						resolver := &Resolver{
-							Object:         o,
-							Field:          f,
-							Implementation: `panic("not implemented yet")`,
-						}
-						enhanceResolver(resolver, models)
-						if resolver.Model.BoilerModel != nil && resolver.Model.BoilerModel.Name != "" {
-							file.Resolvers = append(file.Resolvers, resolver)
-						}
-					}
+				replace := map[string]string{
+					"create": "",
+					"update": "",
+					"delete": "",
 				}
 
+				for s, r := range replace {
+					n = strings.Replace(n, s, r, -1)
+				}
+
+				if strings.EqualFold(internal.GetFirstWord(v[0].Name), internal.GetFirstWord(n)) || strings.EqualFold(internal.Plural(internal.GetFirstWord(v[0].Name)), internal.GetFirstWord(n)) {
+					resolver := &Resolver{
+						Object:         o,
+						Field:          f,
+						Implementation: `panic("not implemented yet")`,
+					}
+					enhanceResolver(resolver, models)
+					if resolver.Model.BoilerModel != nil && resolver.Model.BoilerModel.Name != "" {
+						file.Resolvers = append(file.Resolvers, resolver)
+					}
+				}
 			}
 
-			resolverBuild.Models = v
+		}
 
-			if err := internal.WriteTemplateFile(dir+"/resolvers/"+strings.ToLower(internal.GetFirstWord(v[0].Name))+"_gen.go", internal.Options{
-				Template:             templateContent,
-				PackageName:          data.Config.Resolver.Package,
-				Data:                 resolverBuild,
-				UserDefinedFunctions: extendedFunctions,
-			}); err != nil {
-				log.Err(err).Msg("Could not write resolver")
-				ch <- err
-				return
-			}
+		resolverBuild.Models = v
 
-			ch <- nil
-		}(v)
-	}
-
-	if err := <-ch; err != nil {
-		return err
+		if err := internal.WriteTemplateFile(dir+"/resolvers/"+strings.ToLower(internal.GetFirstWord(v[0].Name))+"_gen.go", internal.Options{
+			Template:             templateContent,
+			PackageName:          data.Config.Resolver.Package,
+			Data:                 resolverBuild,
+			UserDefinedFunctions: extendedFunctions,
+		}); err != nil {
+			log.Err(err).Msg("Could not write resolver")
+		}
 	}
 
 	// Replace text in resolvers
